@@ -192,20 +192,45 @@
       }
       workspace.addChangeListener(updateGeneratedJson);
 
-      // Enviar para o Robô (Executar)
+      // Enviar para o Robô (Executar) - Modificado para usar a API Python se disponível
       document.getElementById('execute-btn').addEventListener('click', function() {
         var jsonOutput = document.getElementById('code-output').textContent;
         var outputDiv = document.getElementById('program-output');
-        outputDiv.textContent = 'Enviando para o servidor...\n';
+        outputDiv.textContent = 'Processando...\n';
         
         let dataToSend;
         try {
           dataToSend = JSON.parse(jsonOutput);
         } catch (error) {
-          outputDiv.textContent = 'Erro de parsing no JSON gerado: ' + error + '\nVerifique a área \"JSON Gerado\".';
+          outputDiv.textContent = 'Erro de parsing no JSON gerado: ' + error + '\nVerifique a área "JSON Gerado".';
           return;
         }
 
+        // Verifica se a API Python (pywebview) está disponível
+        if (typeof window.pywebview !== 'undefined' && typeof window.pywebview.api !== 'undefined' && 
+            typeof window.pywebview.api.handle_robot_data === 'function') {
+            outputDiv.textContent += 'Enviando dados para a interface Python nativa...\n';
+            // Chama a função Python exposta pela API do PyWebView
+            window.pywebview.api.handle_robot_data(dataToSend).then(function(response) {
+                console.log("Resposta da API Python: ", response);
+                outputDiv.textContent += 'Resposta da API Python: ' + JSON.stringify(response) + '\n';
+                // A janela PyWebView será fechada pelo Python se a chamada for bem-sucedida
+            }).catch(function(error) {
+                console.error("Erro ao chamar API Python: ", error);
+                outputDiv.textContent += 'Erro ao comunicar com a API Python: ' + error + '\n';
+                // Fallback para fetch se a chamada da API falhar por algum motivo inesperado
+                executeFetchFallback(dataToSend, outputDiv);
+            });
+        } else {
+            // Fallback: Se a API não estiver disponível (ex: rodando em navegador comum), usa fetch
+            outputDiv.textContent += 'API Python não detectada. Usando fetch para /execute...\n';
+            executeFetchFallback(dataToSend, outputDiv);
+        }
+      });
+
+      // Função de fallback para enviar dados via fetch (comportamento original)
+      function executeFetchFallback(dataToSend, outputDiv) {
+        outputDiv.textContent += 'Enviando para o servidor via fetch...\n';
         fetch('/execute', {
           method: 'POST',
           headers: {
@@ -216,8 +241,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            outputDiv.textContent = 'Sucesso:\n' + data.message + '\n';
-            // Ajuste para exibir processed_output corretamente se for uma lista de objetos
+            outputDiv.textContent = 'Sucesso (via fetch):\n' + data.message + '\n';
             if (data.processed_output && Array.isArray(data.processed_output)) {
                 outputDiv.textContent += 'Saída do Processamento:\n' + 
                     data.processed_output.map(item => JSON.stringify(item, null, 2)).join('\n---\n');
@@ -228,16 +252,16 @@
                outputDiv.textContent += '\n\nDados Recebidos pelo Servidor:\n' + JSON.stringify(data.received_data, null, 2);
             }
           } else {
-            outputDiv.textContent = 'Erro do Servidor: ' + data.error;
+            outputDiv.textContent = 'Erro do Servidor (via fetch): ' + data.error;
              if (data.received_data) {
                outputDiv.textContent += '\n\nDados Enviados (que causaram erro):\n' + JSON.stringify(data.received_data, null, 2);
             }
           }
         })
         .catch(error => {
-          outputDiv.textContent = 'Erro na comunicação com o servidor: ' + error;
+          outputDiv.textContent = 'Erro na comunicação com o servidor (via fetch): ' + error;
         });
-      });
+      }
 
       // Limpar o workspace
       document.getElementById('clear-btn').addEventListener('click', function() {

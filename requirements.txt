@@ -1,2 +1,4 @@
 Flask==2.0.1
 Werkzeug==2.0.1
+pywebview==4.0.1
+PyQt5==5.15.10
