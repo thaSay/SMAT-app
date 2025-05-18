@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <title>Programação em Blocos para Robô Stop Motion</title>
-  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-  <!-- Certifique-se que o gerador JavaScript do Blockly está incluído se não for o padrão -->
-  <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
-  <script src="https://unpkg.com/blockly/msg/pt-br.js"></script>
+  <!-- Alterado para CDN unpkg e versão específica do Blockly -->
+  <script src="https://unpkg.com/blockly@10.4.0/blockly_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@10.4.0/javascript_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@10.4.0/msg/pt.js"></script>
   <!-- Scripts locais para blocos e geradores -->
   <script src="{{ url_for('static', filename='blocks.js') }}"></script>
   <script src="{{ url_for('static', filename='generator.js') }}"></script>
@@ -97,9 +97,6 @@
   </style>
 </head>
 <body>
-  <div id="header">
-    <h1>Programação em Blocos para Robô Stop Motion</h1>
-  </div>
   
   <div id="button-container">
     <div>
@@ -134,275 +131,296 @@
   </xml>
 
   <script>
-    // Inicializar o Blockly
-    var blocklyDiv = document.getElementById('blockly-container');
-    var workspace = Blockly.inject(blocklyDiv, {
-      toolbox: document.getElementById('toolbox'),
-      grid: {
-        spacing: 20,
-        length: 3,
-        colour: '#ccc',
-        snap: true
-      },
-      zoom: {
-        controls: true,
-        wheel: true,
-        startScale: 1.0,
-        maxScale: 3,
-        minScale: 0.3,
-        scaleSpeed: 1.2
-      },
-      trashcan: true
-    });
-
-    // Função para redimensionar o Blockly quando a janela muda de tamanho
-    function onResize() {
-      var element = blocklyDiv;
-      var x = 0;
-      var y = 0;
-      do {
-        x += element.offsetLeft;
-        y += element.offsetTop;
-        element = element.offsetParent;
-      } while (element);
-      // Position blocklyDiv over blocklyArea.
-      blocklyDiv.style.left = x + 'px';
-      blocklyDiv.style.top = y + 'px';
-      blocklyDiv.style.width = blocklyDiv.offsetWidth + 'px';
-      blocklyDiv.style.height = blocklyDiv.offsetHeight + 'px';
-      Blockly.svgResize(workspace);
-    };
-    // window.addEventListener('resize', onResize, false);
-    // onResize(); // Chame uma vez para definir o tamanho inicial
-    // A maneira mais simples de garantir o redimensionamento é chamar o resize no final do script
-    // ou após o carregamento completo da página.
-
-    // Atualizar o JSON gerado quando o workspace mudar
-    function updateGeneratedJson() {
-      // Usar Blockly.JavaScript conforme definido em generator.js
-      var code = Blockly.JavaScript.workspaceToCode(workspace);
-      // Se houver múltiplos blocos de movimento, eles serão concatenados.
-      // Precisamos envolvê-los em uma lista JSON.
-      if (code) {
-        // Adiciona vírgulas entre os objetos JSON e os envolve em colchetes
-        // Remove o último ; e \n se houver
-        let jsonObjects = code.trim();
-        if (jsonObjects.endsWith(';')) {
-            jsonObjects = jsonObjects.slice(0, -1).trim();
-        }
-        // Tenta fazer o parse para ver se é um único objeto ou múltiplos concatenados
-        try {
-            JSON.parse(jsonObjects); // É um único objeto JSON válido
-             document.getElementById('code-output').textContent = jsonObjects;
-        } catch (e) {
-            // Provavelmente múltiplos objetos, vamos formatar como uma lista
-            // Esta heurística assume que cada bloco principal gera um objeto JSON completo.
-            // E que eles são separados por nada ou apenas espaços/novas linhas após a remoção do ;
-            const individualJsons = jsonObjects.replace(/}\\s*{/g, '}\\\n,{\\\n{'); // Adiciona vírgula entre objetos
-            document.getElementById('code-output').textContent = '[' + individualJsons + ']';
-        }
-
-      } else {
-        document.getElementById('code-output').textContent = '';
-      }
-    }
-    workspace.addChangeListener(updateGeneratedJson);
-
-    // Enviar para o Robô (Executar)
-    document.getElementById('execute-btn').addEventListener('click', function() {
-      var jsonOutput = document.getElementById('code-output').textContent;
-      var outputDiv = document.getElementById('program-output');
-      outputDiv.textContent = 'Enviando para o servidor...\n';
-      
-      let dataToSend;
-      try {
-        dataToSend = JSON.parse(jsonOutput);
-      } catch (error) {
-        outputDiv.textContent = 'Erro de parsing no JSON gerado: ' + error + '\nVerifique a área "JSON Gerado".';
-        return;
-      }
-
-      fetch('/execute', { // A rota definida no app.py
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    window.addEventListener('load', function() {
+      // Inicializar o Blockly
+      var blocklyDiv = document.getElementById('blockly-container');
+      var workspace = Blockly.inject(blocklyDiv, {
+        toolbox: document.getElementById('toolbox'),
+        grid: {
+          spacing: 20,
+          length: 3,
+          colour: '#ccc',
+          snap: true
         },
-        body: JSON.stringify(dataToSend), // Envia o JSON parseado e re-stringificado
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          outputDiv.textContent = 'Sucesso:\n' + data.message + '\n';
-          if (data.processed_output) {
-            outputDiv.textContent += 'Saída do Processamento:\n' + data.processed_output.join('\n');
+        zoom: {
+          controls: true,
+          wheel: true,
+          startScale: 1.0,
+          maxScale: 3,
+          minScale: 0.3,
+          scaleSpeed: 1.2
+        },
+        trashcan: true
+      });
+
+      // Função para redimensionar o Blockly (simplificada)
+      setTimeout(() => {
+          Blockly.svgResize(workspace);
+      }, 0);
+
+      // Atualizar o JSON gerado quando o workspace mudar
+      function updateGeneratedJson() {
+        var code = Blockly.JavaScript.workspaceToCode(workspace);
+        console.log("Raw output from workspaceToCode:", code); 
+
+        if (code && code.trim() !== "") {
+          let jsonObjects = code.trim();
+          if (jsonObjects.endsWith(';')) {
+              jsonObjects = jsonObjects.slice(0, -1).trim();
           }
-          if (data.received_data) {
-             outputDiv.textContent += '\n\nDados Recebidos pelo Servidor:\n' + JSON.stringify(data.received_data, null, 2);
+          if (jsonObjects === "") {
+              document.getElementById('code-output').textContent = '[]';
+              return;
+          }
+          try {
+              JSON.parse(jsonObjects);
+              document.getElementById('code-output').textContent = jsonObjects;
+          } catch (e) {
+              const individualJsons = jsonObjects.replace(/}\s*{/g, '},\n{');
+              const potentialArray = '[' + individualJsons + ']';
+              try {
+                  JSON.parse(potentialArray);
+                  document.getElementById('code-output').textContent = potentialArray;
+              } catch (eArrayParse) {
+                  document.getElementById('code-output').textContent = jsonObjects; 
+                  console.error("Falha ao formatar o código gerado como um array JSON. Código original:", jsonObjects, "Erro de parse do array:", eArrayParse);
+              }
           }
         } else {
-          outputDiv.textContent = 'Erro do Servidor: ' + data.error;
-           if (data.received_data) {
-             outputDiv.textContent += '\n\nDados Enviados:\n' + JSON.stringify(data.received_data, null, 2);
-          }
+          document.getElementById('code-output').textContent = '[]';
         }
-      })
-      .catch(error => {
-        outputDiv.textContent = 'Erro na comunicação com o servidor: ' + error;
-      });
-    });
-
-    // Limpar o workspace
-    document.getElementById('clear-btn').addEventListener('click', function() {
-      if (confirm('Tem certeza que deseja limpar todos os blocos?')) {
-        workspace.clear();
-        document.getElementById('program-output').textContent = '';
-        document.getElementById('code-output').textContent = ''; // Limpa também o JSON gerado
       }
-    });
+      workspace.addChangeListener(updateGeneratedJson);
 
-    // Salvar blocos
-    document.getElementById('save-btn').addEventListener('click', function() {
-      try {
-        var xml = Blockly.Xml.workspaceToDom(workspace);
-        var xmlText = Blockly.Xml.domToText(xml);
+      // Enviar para o Robô (Executar)
+      document.getElementById('execute-btn').addEventListener('click', function() {
+        var jsonOutput = document.getElementById('code-output').textContent;
+        var outputDiv = document.getElementById('program-output');
+        outputDiv.textContent = 'Enviando para o servidor...\n';
         
-        fetch('/save', { // A rota definida no app.py
+        let dataToSend;
+        try {
+          dataToSend = JSON.parse(jsonOutput);
+        } catch (error) {
+          outputDiv.textContent = 'Erro de parsing no JSON gerado: ' + error + '\nVerifique a área \"JSON Gerado\".';
+          return;
+        }
+
+        fetch('/execute', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({blocks: xmlText}),
+          body: JSON.stringify(dataToSend),
         })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('Blocos salvos com sucesso!');
+            outputDiv.textContent = 'Sucesso:\n' + data.message + '\n';
+            // Ajuste para exibir processed_output corretamente se for uma lista de objetos
+            if (data.processed_output && Array.isArray(data.processed_output)) {
+                outputDiv.textContent += 'Saída do Processamento:\n' + 
+                    data.processed_output.map(item => JSON.stringify(item, null, 2)).join('\n---\n');
+            } else if (data.processed_output) {
+                 outputDiv.textContent += 'Saída do Processamento:\n' + JSON.stringify(data.processed_output, null, 2);
+            }
+            if (data.received_data) {
+               outputDiv.textContent += '\n\nDados Recebidos pelo Servidor:\n' + JSON.stringify(data.received_data, null, 2);
+            }
           } else {
-            alert('Erro ao salvar blocos: ' + (data.error || 'Erro desconhecido'));
+            outputDiv.textContent = 'Erro do Servidor: ' + data.error;
+             if (data.received_data) {
+               outputDiv.textContent += '\n\nDados Enviados (que causaram erro):\n' + JSON.stringify(data.received_data, null, 2);
+            }
           }
         })
         .catch(error => {
-          alert('Erro na comunicação ao salvar: ' + error);
+          outputDiv.textContent = 'Erro na comunicação com o servidor: ' + error;
         });
-      } catch (e) {
-        alert('Erro ao serializar os blocos: ' + e);
-      }
-    });
-
-    // Carregar blocos
-    document.getElementById('load-btn').addEventListener('click', function() {
-      fetch('/load') // A rota definida no app.py
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.blocks) {
-          try {
-            workspace.clear();
-            var xml = Blockly.Xml.textToDom(data.blocks);
-            Blockly.Xml.domToWorkspace(xml, workspace);
-            alert('Blocos carregados com sucesso!');
-            updateGeneratedJson(); // Atualiza o JSON após carregar
-          } catch (e) {
-            alert('Erro ao carregar blocos para o workspace: ' + e);
-            workspace.clear(); // Limpa em caso de erro no carregamento
-          }
-        } else {
-          alert(data.error || 'Nenhum bloco salvo encontrado ou falha ao carregar.');
-        }
-      })
-      .catch(error => {
-        alert('Erro na comunicação ao carregar: ' + error);
       });
-    });
-    
-    // Chamar o resize do Blockly após tudo estar carregado e o DOM pronto
-    window.addEventListener('load', function() {
-        // Simples redimensionamento baseado no contêiner
-        var blocklyArea = document.getElementById('main-container'); // Ou o contêiner mais direto do blocklyDiv
-        var blocklyDiv = document.getElementById('blockly-container');
-        function doResize() {
-            // Position blocklyDiv over blocklyArea.
-            var element = blocklyDiv;
-            var x = 0;
-            var y = 0;
-            // Não precisamos calcular a posição absoluta se o blocklyDiv já está posicionado corretamente por CSS
-            
-            blocklyDiv.style.width = blocklyArea.offsetWidth * 0.66 + 'px'; // Ex: 2/3 da largura
-            blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
-            Blockly.svgResize(workspace);
-        }
-        // window.addEventListener('resize', doResize, false);
-        // doResize(); // Chamada inicial
-        // Uma forma mais robusta de garantir que o Blockly se redimensione corretamente
-        // é usar um pequeno timeout ou garantir que o contêiner tenha dimensões definidas.
-        setTimeout(() => {
-            Blockly.svgResize(workspace);
-        }, 0);
 
-        // Adicionar blocos padrão ao carregar
-        var defaultBlocksXml = `
-        <xml xmlns="https://developers.google.com/blockly/xml">
-          <block type="movimento_sequence" id="default_movimento" x="50" y="50">
-            <field name="FPS">12</field>
-            <field name="Duracao">150</field>
-            <value name="Inicio">
-              <block type="robo_pose" id="default_inicio">
-                <field name="X">0</field>
-                <field name="Y">0</field>
-                <field name="BDireito">0</field>
-                <field name="BEsquerdo">0</field>
-                <field name="PDireito">0</field>
-                <field name="PEsquerdo">0</field>
-              </block>
-            </value>
-            <value name="Fim">
-              <block type="robo_pose" id="default_fim">
-                <field name="X">0</field>
-                <field name="Y">0</field>
-                <field name="BDireito">0</field>
-                <field name="BEsquerdo">0</field>
-                <field name="PDireito">0</field>
-                <field name="PEsquerdo">0</field>
-              </block>
-            </value>
-          </block>
-        </xml>
-        `;
-        console.log("Verificando Blockly e Blockly.Xml antes de carregar blocos padrão:");
-        console.log("Blockly:", typeof Blockly);
+      // Limpar o workspace
+      document.getElementById('clear-btn').addEventListener('click', function() {
+        if (confirm('Tem certeza que deseja limpar todos os blocos?')) {
+          workspace.clear();
+          document.getElementById('program-output').textContent = '';
+          document.getElementById('code-output').textContent = '[]'; // Limpa JSON para '[]'
+        }
+      });
+
+      // Salvar blocos
+      document.getElementById('save-btn').addEventListener('click', function() {
+        console.log("Botão 'Salvar Blocos' clicado. Verificando Blockly.Xml...");
+        console.log("typeof Blockly:", typeof Blockly);
         if (typeof Blockly !== 'undefined') {
-            console.log("Blockly.Xml:", typeof Blockly.Xml);
+            console.log("typeof Blockly.Xml:", typeof Blockly.Xml);
             if (typeof Blockly.Xml !== 'undefined') {
-                console.log("Blockly.Xml.textToDom:", typeof Blockly.Xml.textToDom);
+                console.log("typeof Blockly.Xml.workspaceToDom:", typeof Blockly.Xml.workspaceToDom);
+            }
+            console.log("typeof Blockly.utils:", typeof Blockly.utils);
+            if (typeof Blockly.utils !== 'undefined') {
+                console.log("typeof Blockly.utils.xml:", typeof Blockly.utils.xml);
+                if (typeof Blockly.utils.xml !== 'undefined') {
+                    console.log("typeof Blockly.utils.xml.domToText:", typeof Blockly.utils.xml.domToText);
+                }
             }
         }
 
+        if (typeof Blockly === 'undefined' || typeof Blockly.Xml === 'undefined' || 
+            typeof Blockly.utils === 'undefined' || typeof Blockly.utils.xml === 'undefined' ||
+            typeof Blockly.Xml.workspaceToDom !== 'function' || typeof Blockly.utils.xml.domToText !== 'function') {
+            alert('Erro: Funções essenciais do Blockly para salvar XML não estão disponíveis.');
+            console.error('Erro: Funções essenciais do Blockly para salvar XML não estão disponíveis. Blockly:', Blockly, 
+                          'Blockly.Xml:', (Blockly && Blockly.Xml), 
+                          'Blockly.utils.xml:', (Blockly && Blockly.utils && Blockly.utils.xml));
+            return;
+        }
         try {
-            if (typeof Blockly !== 'undefined' && typeof Blockly.Xml !== 'undefined' && typeof Blockly.Xml.textToDom === 'function') {
-                var xml = Blockly.Xml.textToDom(defaultBlocksXml);
-                Blockly.Xml.domToWorkspace(xml, workspace);
+          var xml = Blockly.Xml.workspaceToDom(workspace);
+          var xmlText = Blockly.utils.xml.domToText(xml);
+          
+          fetch('/save', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({blocks: xmlText}),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Blocos salvos com sucesso!');
             } else {
-                console.error("Blockly.Xml.textToDom não está disponível. Não foi possível carregar blocos padrão.");
-                // Opcional: Tentar carregar após um pequeno delay, caso seja um problema de tempo de carregamento
-                // setTimeout(function() {
-                //     try {
-                //         if (Blockly && Blockly.Xml && Blockly.Xml.textToDom) {
-                //             var xml = Blockly.Xml.textToDom(defaultBlocksXml);
-                //             Blockly.Xml.domToWorkspace(xml, workspace);
-                //             updateGeneratedJson();
-                //         } else {
-                //             console.error("Blockly.Xml.textToDom ainda não disponível após delay.");
-                //         }
-                //     } catch (e_delay) {
-                //         console.error("Erro ao carregar blocos padrão (após delay):", e_delay);
-                //     }
-                // }, 1000); // Tenta após 1 segundo
+              alert('Erro ao salvar blocos: ' + (data.error || 'Erro desconhecido'));
             }
+          })
+          .catch(error => {
+            alert('Erro na comunicação ao salvar: ' + error);
+          });
         } catch (e) {
-            console.error("Erro ao carregar blocos padrão (dentro do try-catch principal):", e);
+          alert('Erro ao serializar os blocos: ' + e);
+          console.error('Erro ao serializar blocos (save-btn):', e);
+        }
+      });
+
+      // Carregar blocos
+      document.getElementById('load-btn').addEventListener('click', function() {
+        console.log("Botão 'Carregar Blocos' clicado. Verificando Blockly.Xml...");
+        console.log("typeof Blockly:", typeof Blockly);
+        if (typeof Blockly !== 'undefined') {
+            console.log("typeof Blockly.Xml:", typeof Blockly.Xml);
+            if (typeof Blockly.Xml !== 'undefined') {
+                console.log("typeof Blockly.Xml.domToWorkspace:", typeof Blockly.Xml.domToWorkspace);
+            }
+            console.log("typeof Blockly.utils:", typeof Blockly.utils);
+            if (typeof Blockly.utils !== 'undefined') {
+                console.log("typeof Blockly.utils.xml:", typeof Blockly.utils.xml);
+                if (typeof Blockly.utils.xml !== 'undefined') {
+                    console.log("typeof Blockly.utils.xml.textToDom:", typeof Blockly.utils.xml.textToDom);
+                }
+            }
         }
 
-        updateGeneratedJson(); // Atualiza o JSON ao carregar a página e após adicionar blocos padrão
-    });
+        fetch('/load')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.blocks) {
+            if (typeof Blockly === 'undefined' || typeof Blockly.Xml === 'undefined' || 
+                typeof Blockly.utils === 'undefined' || typeof Blockly.utils.xml === 'undefined' ||
+                typeof Blockly.utils.xml.textToDom !== 'function' || typeof Blockly.Xml.domToWorkspace !== 'function') {
+              let errorMsg = 'Erro: Funções essenciais do Blockly para carregar XML não estão disponíveis.';
+              console.error(errorMsg, 'Blockly:', Blockly, 
+                            'Blockly.Xml:', (Blockly && Blockly.Xml),
+                            'Blockly.utils.xml:', (Blockly && Blockly.utils && Blockly.utils.xml));
+              alert(errorMsg);
+              return;
+            }
+            try {
+              workspace.clear();
+              var xml = Blockly.utils.xml.textToDom(data.blocks);
+              Blockly.Xml.domToWorkspace(xml, workspace);
+              alert('Blocos carregados com sucesso!');
+              updateGeneratedJson();
+            } catch (e) {
+              alert('Erro ao carregar blocos para o workspace: ' + e);
+              console.error('Erro detalhado ao carregar blocos para o workspace (load-btn):', e);
+              workspace.clear();
+            }
+          } else {
+            alert(data.error || 'Nenhum bloco salvo encontrado ou falha ao carregar.');
+          }
+        })
+        .catch(error => {
+          alert('Erro na comunicação ao carregar: ' + error);
+          console.error('Erro de fetch ao carregar blocos:', error);
+        });
+      });
+      
+      // Adicionar blocos padrão ao carregar
+      var defaultBlocksXml = `
+      <xml xmlns="https://developers.google.com/blockly/xml">
+        <block type="movimento_sequence" id="default_movimento" x="50" y="50">
+          <field name="FPS">12</field>
+          <field name="Duracao">150</field>
+          <value name="Inicio">
+            <block type="robo_pose" id="default_inicio">
+              <field name="X">0</field>
+              <field name="Y">0</field>
+              <field name="BDireito">0</field>
+              <field name="BEsquerdo">0</field>
+              <field name="PDireito">0</field>
+              <field name="PEsquerdo">0</field>
+            </block>
+          </value>
+          <value name="Fim">
+            <block type="robo_pose" id="default_fim">
+              <field name="X">0</field>
+              <field name="Y">0</field>
+              <field name="BDireito">0</field>
+              <field name="BEsquerdo">0</field>
+              <field name="PDireito">0</field>
+              <field name="PEsquerdo">0</field>
+            </block>
+          </value>
+        </block>
+      </xml>
+      `;
+      console.log("Verificando Blockly e Blockly.Xml antes de carregar blocos padrão (dentro do window.onload):");
+      console.log("Blockly:", typeof Blockly);
+      if (typeof Blockly !== 'undefined') {
+          console.log("Blockly.Xml:", typeof Blockly.Xml);
+          if (typeof Blockly.Xml !== 'undefined') {
+              console.log("Blockly.Xml.domToWorkspace:", typeof Blockly.Xml.domToWorkspace);
+          }
+          console.log("Blockly.utils:", typeof Blockly.utils);
+          if (typeof Blockly.utils !== 'undefined') {
+              console.log("Blockly.utils.xml:", typeof Blockly.utils.xml);
+              if (typeof Blockly.utils.xml !== 'undefined') {
+                  console.log("Blockly.utils.xml.textToDom:", typeof Blockly.utils.xml.textToDom);
+              }
+          }
+      }
+
+      try {
+          if (typeof Blockly !== 'undefined' && 
+              typeof Blockly.Xml !== 'undefined' && 
+              typeof Blockly.utils !== 'undefined' && 
+              typeof Blockly.utils.xml !== 'undefined' && 
+              typeof Blockly.utils.xml.textToDom === 'function' &&
+              typeof Blockly.Xml.domToWorkspace === 'function') {
+              var xml = Blockly.utils.xml.textToDom(defaultBlocksXml);
+              Blockly.Xml.domToWorkspace(xml, workspace);
+          } else {
+              console.error("Funções XML do Blockly (textToDom ou domToWorkspace) não estão disponíveis. Não foi possível carregar blocos padrão.");
+              alert("Alerta: Não foi possível carregar os blocos padrão iniciais devido à falta de funções XML do Blockly.");
+          }
+      } catch (e) {
+          console.error("Erro ao carregar blocos padrão (dentro do try-catch principal):", e);
+          alert("Alerta: Erro ao tentar carregar os blocos padrão iniciais: " + e.message);
+      }
+
+      updateGeneratedJson(); // Atualiza o JSON ao carregar a página e após adicionar blocos padrão
+    }); // Fim do window.addEventListener('load', ...)
   </script>
 </body>
 </html>
