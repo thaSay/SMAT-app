@@ -142,12 +142,14 @@ def execute():
                 # use the original list of dictionaries.
                 final_json_output_list = processed_outputs
 
-        return jsonify({
+        result = jsonify({
             "success": True, 
             "message": "Comandos processados.", 
             "processed_output": final_json_output_list, # Use the potentially transformed list
             "received_data": data
         })
+
+        return result
 
     except Exception as e:
         app.logger.error(f"Erro ao executar comandos: {e}", exc_info=True)

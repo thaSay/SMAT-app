@@ -1,387 +1,513 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Programação em Blocos para Robô Stop Motion</title>
-  <!-- Alterado para CDN unpkg e versão específica do Blockly -->
-  <script src="https://unpkg.com/blockly@10.4.0/blockly_compressed.js"></script>
-  <script src="https://unpkg.com/blockly@10.4.0/javascript_compressed.js"></script>
-  <script src="https://unpkg.com/blockly@10.4.0/msg/pt.js"></script>
-  <!-- Scripts locais para blocos e geradores -->
-  <script src="{{ url_for('static', filename='blocks.js') }}"></script>
-  <script src="{{ url_for('static', filename='generator.js') }}"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      height: 100vh;
-      flex-direction: column;
-    }
-    #header {
-      background-color: #4a6ea9;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    #main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden; /* Para evitar barras de rolagem desnecessárias no corpo */
-    }
-    #blockly-container {
-      flex: 2;
-      height: 100%;
-      position: relative; /* Necessário para o Blockly se dimensionar corretamente */
-    }
-    #output-column {
-      flex: 1;
-      background-color: #f0f0f0;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto; /* Barra de rolagem se o conteúdo exceder */
-    }
-    #code-output-container, #program-output-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 10px;
-      min-height: 150px; /* Altura mínima para as caixas de saída */
-    }
-    #code-output, #program-output {
-      flex: 1;
-      background-color: white;
-      border: 1px solid #ddd;
-      padding: 10px;
-      font-family: monospace;
-      overflow: auto;
-      white-space: pre-wrap; /* Para quebrar linha no JSON */
-      word-break: break-all; /* Para quebrar palavras longas */
-    }
-    #button-container {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background-color: #e0e0e0;
-    }
-    button {
-      padding: 8px 16px;
-      background-color: #4a6ea9;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background-color: #3a5ea9;
-    }
-    #execute-btn {
-      background-color: #4caf50;
-    }
-    #execute-btn:hover {
-      background-color: #3a9140;
-    }
-    #clear-btn {
-      background-color: #f44336;
-    }
-    #clear-btn:hover {
-      background-color: #d32f2f;
-    }
-    h3 {
-      margin-top: 0;
-      margin-bottom: 5px;
-    }
-  </style>
-</head>
-<body>
-  
-  <div id="button-container">
-    <div>
-      <button id="save-btn">Salvar Blocos</button>
-      <button id="load-btn">Carregar Blocos</button>
-    </div>
-    <div>
-      <button id="clear-btn">Limpar Blocos</button>
-      <button id="execute-btn">Enviar para Robô</button>
-    </div>
-  </div>
-  
-  <div id="main-container">
-    <div id="blockly-container"></div>
-    <div id="output-column">
-      <div id="code-output-container">
-        <h3>JSON Gerado:</h3>
-        <pre id="code-output"></pre>
-      </div>
-      <div id="program-output-container">
-        <h3>Resposta do Servidor:</h3>
-        <pre id="program-output"></pre>
-      </div>
-    </div>
-  </div>
+  <head>
+    <meta charset="utf-8" />
+    <title>Programação em Blocos para Robô Stop Motion</title>
+    <!-- Alterado para CDN unpkg e versão específica do Blockly -->
+    <script src="https://unpkg.com/blockly@10.4.0/blockly_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@10.4.0/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@10.4.0/msg/pt.js"></script>
+    <!-- Scripts locais para blocos e geradores -->
+    <script src="{{ url_for('static', filename='blocks.js') }}"></script>
+    <script src="{{ url_for('static', filename='generator.js') }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Slackey&display=swap"
+      rel="stylesheet"
+    />
 
-  <xml id="toolbox" style="display: none">
-    <category name="Movimentos" colour="120">
-      <block type="robo_pose"></block>
-      <block type="movimento_sequence"></block>
-    </category>
-  </xml>
-
-  <script>
-    window.addEventListener('load', function() {
-      // Inicializar o Blockly
-      var blocklyDiv = document.getElementById('blockly-container');
-      var workspace = Blockly.inject(blocklyDiv, {
-        toolbox: document.getElementById('toolbox'),
-        grid: {
-          spacing: 20,
-          length: 3,
-          colour: '#ccc',
-          snap: true
-        },
-        zoom: {
-          controls: true,
-          wheel: true,
-          startScale: 1.0,
-          maxScale: 3,
-          minScale: 0.3,
-          scaleSpeed: 1.2
-        },
-        trashcan: true
-      });
-
-      // Função para redimensionar o Blockly (simplificada)
-      setTimeout(() => {
-          Blockly.svgResize(workspace);
-      }, 0);
-
-      // Atualizar o JSON gerado quando o workspace mudar
-      function updateGeneratedJson() {
-        var code = Blockly.JavaScript.workspaceToCode(workspace);
-        console.log("Raw output from workspaceToCode:", code); 
-
-        if (code && code.trim() !== "") {
-          let jsonObjects = code.trim();
-          if (jsonObjects.endsWith(';')) {
-              jsonObjects = jsonObjects.slice(0, -1).trim();
-          }
-          if (jsonObjects === "") {
-              document.getElementById('code-output').textContent = '[]';
-              return;
-          }
-          try {
-              JSON.parse(jsonObjects);
-              document.getElementById('code-output').textContent = jsonObjects;
-          } catch (e) {
-              const individualJsons = jsonObjects.replace(/}\s*{/g, '},\n{');
-              const potentialArray = '[' + individualJsons + ']';
-              try {
-                  JSON.parse(potentialArray);
-                  document.getElementById('code-output').textContent = potentialArray;
-              } catch (eArrayParse) {
-                  document.getElementById('code-output').textContent = jsonObjects; 
-                  console.error("Falha ao formatar o código gerado como um array JSON. Código original:", jsonObjects, "Erro de parse do array:", eArrayParse);
-              }
-          }
-        } else {
-          document.getElementById('code-output').textContent = '[]';
+    <style>
+      .slackey-regular {
+        font-family: "Slackey", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 30px;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        height: 100vh;
+        flex-direction: column;
+      }
+      #header {
+        background-color: #4a6ea9;
+        color: white;
+        padding: 10px;
+        text-align: center;
+      }
+      #main-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden; /* Para evitar barras de rolagem desnecessárias no corpo */
+      }
+      #blockly-container {
+        flex: 2;
+        height: 100%;
+        position: relative; /* Necessário para o Blockly se dimensionar corretamente */
+        .blocklyToolboxDiv {
+          background-color: #f0f0f0;
         }
       }
-      workspace.addChangeListener(updateGeneratedJson);
+      #output-column {
+        flex: 1;
+        background-color: #f0f0f0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto; /* Barra de rolagem se o conteúdo exceder */
+      }
+      #code-output-container,
+      #result-container,
+      #program-output-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+        min-height: 150px; /* Altura mínima para as caixas de saída */
+      }
+      #code-output,
+      #result-output,
+      #program-output {
+        flex: 1;
+        background-color: white;
+        border: 1px solid #ddd;
+        padding: 10px;
+        font-family: monospace;
+        overflow: auto;
+        white-space: pre-wrap; /* Para quebrar linha no JSON */
+        word-break: break-all; /* Para quebrar palavras longas */
+      }
+      #header-container {
+        padding: 10px;
+        background-color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+      }
 
-      // Enviar para o Robô (Executar) - Modificado para usar a API Python se disponível
-      document.getElementById('execute-btn').addEventListener('click', function() {
-        var jsonOutput = document.getElementById('code-output').textContent;
-        var outputDiv = document.getElementById('program-output');
-        outputDiv.textContent = 'Processando...\n';
-        
-        let dataToSend;
-        try {
-          dataToSend = JSON.parse(jsonOutput);
-        } catch (error) {
-          outputDiv.textContent = 'Erro de parsing no JSON gerado: ' + error + '\nVerifique a área "JSON Gerado".';
-          return;
-        }
+      #button-container {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px;
+        background-color: #e0e0e0;
+      }
+      button {
+        padding: 8px 16px;
+        background-color: #4a6ea9;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background-color: #3a5ea9;
+      }
+      #execute-btn {
+        background-color: #4caf50;
+      }
+      #execute-btn:hover {
+        background-color: #3a9140;
+      }
+      #clear-btn {
+        background-color: #f44336;
+      }
+      #clear-btn:hover {
+        background-color: #d32f2f;
+      }
+      h3 {
+        margin-top: 0;
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header-container">
+      <div class="slackey-regular">SMAT</div>
+      <div></div>
+    </div>
 
-        // Verifica se a API Python (pywebview) está disponível
-        if (typeof window.pywebview !== 'undefined' && typeof window.pywebview.api !== 'undefined' && 
-            typeof window.pywebview.api.handle_robot_data === 'function') {
-            outputDiv.textContent += 'Enviando dados para a interface Python nativa...\n';
-            // Chama a função Python exposta pela API do PyWebView
-            window.pywebview.api.handle_robot_data(dataToSend).then(function(response) {
-                console.log("Resposta da API Python: ", response);
-                outputDiv.textContent += 'Resposta da API Python: ' + JSON.stringify(response) + '\n';
-                // A janela PyWebView será fechada pelo Python se a chamada for bem-sucedida
-            }).catch(function(error) {
-                console.error("Erro ao chamar API Python: ", error);
-                outputDiv.textContent += 'Erro ao comunicar com a API Python: ' + error + '\n';
-                // Fallback para fetch se a chamada da API falhar por algum motivo inesperado
-                executeFetchFallback(dataToSend, outputDiv);
-            });
-        } else {
-            // Fallback: Se a API não estiver disponível (ex: rodando em navegador comum), usa fetch
-            outputDiv.textContent += 'API Python não detectada. Usando fetch para /execute...\n';
-            executeFetchFallback(dataToSend, outputDiv);
-        }
-      });
+    <div id="main-container">
+      <div id="blockly-container"></div>
+      <div id="output-column">
+        <div id="code-output-container" style="display: none">
+          <h3>JSON Gerado:</h3>
+          <pre id="code-output"></pre>
+        </div>
+        <div id="program-output-container">
+          <h3>Instructions sended to the robot:</h3>
+          <pre id="program-output"></pre>
+        </div>
+        <div id="result-container">
+          <h3>Video result:</h3>
+          <pre id="result-output" style="color: red">
+ TODO: this screen will have a loading icon each time a new frame is added, and a pic preview with the current state of the video</pre
+          >
+        </div>
+      </div>
+    </div>
 
-      // Função de fallback para enviar dados via fetch (comportamento original)
-      function executeFetchFallback(dataToSend, outputDiv) {
-        outputDiv.textContent += 'Enviando para o servidor via fetch...\n';
-        fetch('/execute', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+    <xml id="toolbox" style="display: none">
+      <category name="Movements" colour="120">
+        <block type="robo_pose"></block>
+        <block type="movimento_sequence"></block>
+      </category>
+    </xml>
+
+    <script>
+      window.addEventListener("load", function () {
+        // Inicializar o Blockly
+        var blocklyDiv = document.getElementById("blockly-container");
+        var workspace = Blockly.inject(blocklyDiv, {
+          toolbox: document.getElementById("toolbox"),
+          grid: {
+            spacing: 20,
+            length: 3,
+            colour: "#ccc",
+            snap: true,
           },
-          body: JSON.stringify(dataToSend),
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            outputDiv.textContent = 'Sucesso (via fetch):\n' + data.message + '\n';
-            if (data.processed_output && Array.isArray(data.processed_output)) {
-                outputDiv.textContent += 'Saída do Processamento:\n' + 
-                    data.processed_output.map(item => JSON.stringify(item, null, 2)).join('\n---\n');
-            } else if (data.processed_output) {
-                 outputDiv.textContent += 'Saída do Processamento:\n' + JSON.stringify(data.processed_output, null, 2);
-            }
-            if (data.received_data) {
-               outputDiv.textContent += '\n\nDados Recebidos pelo Servidor:\n' + JSON.stringify(data.received_data, null, 2);
-            }
-          } else {
-            outputDiv.textContent = 'Erro do Servidor (via fetch): ' + data.error;
-             if (data.received_data) {
-               outputDiv.textContent += '\n\nDados Enviados (que causaram erro):\n' + JSON.stringify(data.received_data, null, 2);
-            }
-          }
-        })
-        .catch(error => {
-          outputDiv.textContent = 'Erro na comunicação com o servidor (via fetch): ' + error;
+          zoom: {
+            controls: true,
+            wheel: true,
+            startScale: 1.0,
+            maxScale: 3,
+            minScale: 0.3,
+            scaleSpeed: 1.2,
+          },
+          trashcan: true,
         });
-      }
 
-      // Limpar o workspace
-      document.getElementById('clear-btn').addEventListener('click', function() {
-        if (confirm('Tem certeza que deseja limpar todos os blocos?')) {
-          workspace.clear();
-          document.getElementById('program-output').textContent = '';
-          document.getElementById('code-output').textContent = '[]'; // Limpa JSON para '[]'
-        }
-      });
+        // Função para redimensionar o Blockly (simplificada)
+        setTimeout(() => {
+          Blockly.svgResize(workspace);
+        }, 0);
 
-      // Salvar blocos
-      document.getElementById('save-btn').addEventListener('click', function() {
-        console.log("Botão 'Salvar Blocos' clicado. Verificando Blockly.Xml...");
-        console.log("typeof Blockly:", typeof Blockly);
-        if (typeof Blockly !== 'undefined') {
-            console.log("typeof Blockly.Xml:", typeof Blockly.Xml);
-            if (typeof Blockly.Xml !== 'undefined') {
-                console.log("typeof Blockly.Xml.workspaceToDom:", typeof Blockly.Xml.workspaceToDom);
-            }
-            console.log("typeof Blockly.utils:", typeof Blockly.utils);
-            if (typeof Blockly.utils !== 'undefined') {
-                console.log("typeof Blockly.utils.xml:", typeof Blockly.utils.xml);
-                if (typeof Blockly.utils.xml !== 'undefined') {
-                    console.log("typeof Blockly.utils.xml.domToText:", typeof Blockly.utils.xml.domToText);
-                }
-            }
-        }
+        // Atualizar o JSON gerado quando o workspace mudar
+        function updateGeneratedJson() {
+          var code = Blockly.JavaScript.workspaceToCode(workspace);
+          console.log("Raw output from workspaceToCode:", code);
 
-        if (typeof Blockly === 'undefined' || typeof Blockly.Xml === 'undefined' || 
-            typeof Blockly.utils === 'undefined' || typeof Blockly.utils.xml === 'undefined' ||
-            typeof Blockly.Xml.workspaceToDom !== 'function' || typeof Blockly.utils.xml.domToText !== 'function') {
-            alert('Erro: Funções essenciais do Blockly para salvar XML não estão disponíveis.');
-            console.error('Erro: Funções essenciais do Blockly para salvar XML não estão disponíveis. Blockly:', Blockly, 
-                          'Blockly.Xml:', (Blockly && Blockly.Xml), 
-                          'Blockly.utils.xml:', (Blockly && Blockly.utils && Blockly.utils.xml));
-            return;
-        }
-        try {
-          var xml = Blockly.Xml.workspaceToDom(workspace);
-          var xmlText = Blockly.utils.xml.domToText(xml);
-          
-          fetch('/save', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({blocks: xmlText}),
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              alert('Blocos salvos com sucesso!');
-            } else {
-              alert('Erro ao salvar blocos: ' + (data.error || 'Erro desconhecido'));
+          if (code && code.trim() !== "") {
+            let jsonObjects = code.trim();
+            if (jsonObjects.endsWith(";")) {
+              jsonObjects = jsonObjects.slice(0, -1).trim();
             }
-          })
-          .catch(error => {
-            alert('Erro na comunicação ao salvar: ' + error);
-          });
-        } catch (e) {
-          alert('Erro ao serializar os blocos: ' + e);
-          console.error('Erro ao serializar blocos (save-btn):', e);
-        }
-      });
-
-      // Carregar blocos
-      document.getElementById('load-btn').addEventListener('click', function() {
-        console.log("Botão 'Carregar Blocos' clicado. Verificando Blockly.Xml...");
-        console.log("typeof Blockly:", typeof Blockly);
-        if (typeof Blockly !== 'undefined') {
-            console.log("typeof Blockly.Xml:", typeof Blockly.Xml);
-            if (typeof Blockly.Xml !== 'undefined') {
-                console.log("typeof Blockly.Xml.domToWorkspace:", typeof Blockly.Xml.domToWorkspace);
-            }
-            console.log("typeof Blockly.utils:", typeof Blockly.utils);
-            if (typeof Blockly.utils !== 'undefined') {
-                console.log("typeof Blockly.utils.xml:", typeof Blockly.utils.xml);
-                if (typeof Blockly.utils.xml !== 'undefined') {
-                    console.log("typeof Blockly.utils.xml.textToDom:", typeof Blockly.utils.xml.textToDom);
-                }
-            }
-        }
-
-        fetch('/load')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success && data.blocks) {
-            if (typeof Blockly === 'undefined' || typeof Blockly.Xml === 'undefined' || 
-                typeof Blockly.utils === 'undefined' || typeof Blockly.utils.xml === 'undefined' ||
-                typeof Blockly.utils.xml.textToDom !== 'function' || typeof Blockly.Xml.domToWorkspace !== 'function') {
-              let errorMsg = 'Erro: Funções essenciais do Blockly para carregar XML não estão disponíveis.';
-              console.error(errorMsg, 'Blockly:', Blockly, 
-                            'Blockly.Xml:', (Blockly && Blockly.Xml),
-                            'Blockly.utils.xml:', (Blockly && Blockly.utils && Blockly.utils.xml));
-              alert(errorMsg);
+            if (jsonObjects === "") {
+              document.getElementById("code-output").textContent = "[]";
               return;
             }
             try {
-              workspace.clear();
-              var xml = Blockly.utils.xml.textToDom(data.blocks);
-              Blockly.Xml.domToWorkspace(xml, workspace);
-              alert('Blocos carregados com sucesso!');
-              updateGeneratedJson();
+              JSON.parse(jsonObjects);
+              document.getElementById("code-output").textContent = jsonObjects;
             } catch (e) {
-              alert('Erro ao carregar blocos para o workspace: ' + e);
-              console.error('Erro detalhado ao carregar blocos para o workspace (load-btn):', e);
-              workspace.clear();
+              const individualJsons = jsonObjects.replace(/}\s*{/g, "},\n{");
+              const potentialArray = "[" + individualJsons + "]";
+              try {
+                JSON.parse(potentialArray);
+                document.getElementById("code-output").textContent =
+                  potentialArray;
+              } catch (eArrayParse) {
+                document.getElementById("code-output").textContent =
+                  jsonObjects;
+                console.error(
+                  "Falha ao formatar o código gerado como um array JSON. Código original:",
+                  jsonObjects,
+                  "Erro de parse do array:",
+                  eArrayParse
+                );
+              }
             }
           } else {
-            alert(data.error || 'Nenhum bloco salvo encontrado ou falha ao carregar.');
+            document.getElementById("code-output").textContent = "[]";
           }
-        })
-        .catch(error => {
-          alert('Erro na comunicação ao carregar: ' + error);
-          console.error('Erro de fetch ao carregar blocos:', error);
-        });
-      });
-      
-      // Adicionar blocos padrão ao carregar
-      var defaultBlocksXml = `
+        }
+        workspace.addChangeListener(updateGeneratedJson);
+
+        // Enviar para o Robô (Executar) - Modificado para usar a API Python se disponível
+        document
+          .getElementById("execute-btn")
+          .addEventListener("click", function () {
+            var jsonOutput = document.getElementById("code-output").textContent;
+            var outputDiv = document.getElementById("program-output");
+            outputDiv.textContent = "Processando...\n";
+
+            let dataToSend;
+            try {
+              dataToSend = JSON.parse(jsonOutput);
+            } catch (error) {
+              outputDiv.textContent =
+                "Erro de parsing no JSON gerado: " +
+                error +
+                '\nVerifique a área "JSON Gerado".';
+              return;
+            }
+
+            // Verifica se a API Python (pywebview) está disponível
+            if (
+              typeof window.pywebview !== "undefined" &&
+              typeof window.pywebview.api !== "undefined" &&
+              typeof window.pywebview.api.handle_robot_data === "function"
+            ) {
+              outputDiv.textContent +=
+                "Enviando dados para a interface Python nativa...\n";
+              // Chama a função Python exposta pela API do PyWebView
+              window.pywebview.api
+                .handle_robot_data(dataToSend)
+                .then(function (response) {
+                  console.log("Resposta da API Python: ", response);
+                  outputDiv.textContent +=
+                    "Resposta da API Python: " +
+                    JSON.stringify(response) +
+                    "\n";
+                  // A janela PyWebView será fechada pelo Python se a chamada for bem-sucedida
+                })
+                .catch(function (error) {
+                  console.error("Erro ao chamar API Python: ", error);
+                  outputDiv.textContent +=
+                    "Erro ao comunicar com a API Python: " + error + "\n";
+                  // Fallback para fetch se a chamada da API falhar por algum motivo inesperado
+                  executeFetchFallback(dataToSend, outputDiv);
+                });
+            } else {
+              // Fallback: Se a API não estiver disponível (ex: rodando em navegador comum), usa fetch
+              outputDiv.textContent +=
+                "API Python não detectada. Usando fetch para /execute...\n";
+              executeFetchFallback(dataToSend, outputDiv);
+            }
+          });
+
+        // Função de fallback para enviar dados via fetch (comportamento original)
+        function executeFetchFallback(dataToSend, outputDiv) {
+          outputDiv.textContent += "Enviando para o servidor via fetch...\n";
+          fetch("/execute", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dataToSend),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                outputDiv.textContent =
+                  "Sucesso (via fetch):\n" + data.message + "\n";
+                if (
+                  data.processed_output &&
+                  Array.isArray(data.processed_output)
+                ) {
+                  outputDiv.textContent +=
+                    "Saída do Processamento:\n" +
+                    data.processed_output
+                      .map((item) => JSON.stringify(item, null, 2))
+                      .join("\n---\n");
+                } else if (data.processed_output) {
+                  outputDiv.textContent +=
+                    "Saída do Processamento:\n" +
+                    JSON.stringify(data.processed_output, null, 2);
+                }
+                if (data.received_data) {
+                  outputDiv.textContent +=
+                    "\n\nDados Recebidos pelo Servidor:\n" +
+                    JSON.stringify(data.received_data, null, 2);
+                }
+              } else {
+                outputDiv.textContent =
+                  "Erro do Servidor (via fetch): " + data.error;
+                if (data.received_data) {
+                  outputDiv.textContent +=
+                    "\n\nDados Enviados (que causaram erro):\n" +
+                    JSON.stringify(data.received_data, null, 2);
+                }
+              }
+            })
+            .catch((error) => {
+              outputDiv.textContent =
+                "Erro na comunicação com o servidor (via fetch): " + error;
+            });
+        }
+
+        // Limpar o workspace
+        document
+          .getElementById("clear-btn")
+          .addEventListener("click", function () {
+            if (confirm("Tem certeza que deseja limpar todos os blocos?")) {
+              workspace.clear();
+              document.getElementById("program-output").textContent = "";
+              document.getElementById("code-output").textContent = "[]"; // Limpa JSON para '[]'
+            }
+          });
+
+        // Salvar blocos
+        document
+          .getElementById("save-btn")
+          .addEventListener("click", function () {
+            console.log(
+              "Botão 'Salvar Blocos' clicado. Verificando Blockly.Xml..."
+            );
+            console.log("typeof Blockly:", typeof Blockly);
+            if (typeof Blockly !== "undefined") {
+              console.log("typeof Blockly.Xml:", typeof Blockly.Xml);
+              if (typeof Blockly.Xml !== "undefined") {
+                console.log(
+                  "typeof Blockly.Xml.workspaceToDom:",
+                  typeof Blockly.Xml.workspaceToDom
+                );
+              }
+              console.log("typeof Blockly.utils:", typeof Blockly.utils);
+              if (typeof Blockly.utils !== "undefined") {
+                console.log(
+                  "typeof Blockly.utils.xml:",
+                  typeof Blockly.utils.xml
+                );
+                if (typeof Blockly.utils.xml !== "undefined") {
+                  console.log(
+                    "typeof Blockly.utils.xml.domToText:",
+                    typeof Blockly.utils.xml.domToText
+                  );
+                }
+              }
+            }
+
+            if (
+              typeof Blockly === "undefined" ||
+              typeof Blockly.Xml === "undefined" ||
+              typeof Blockly.utils === "undefined" ||
+              typeof Blockly.utils.xml === "undefined" ||
+              typeof Blockly.Xml.workspaceToDom !== "function" ||
+              typeof Blockly.utils.xml.domToText !== "function"
+            ) {
+              alert(
+                "Erro: Funções essenciais do Blockly para salvar XML não estão disponíveis."
+              );
+              console.error(
+                "Erro: Funções essenciais do Blockly para salvar XML não estão disponíveis. Blockly:",
+                Blockly,
+                "Blockly.Xml:",
+                Blockly && Blockly.Xml,
+                "Blockly.utils.xml:",
+                Blockly && Blockly.utils && Blockly.utils.xml
+              );
+              return;
+            }
+            try {
+              var xml = Blockly.Xml.workspaceToDom(workspace);
+              var xmlText = Blockly.utils.xml.domToText(xml);
+
+              fetch("/save", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ blocks: xmlText }),
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    alert("Blocos salvos com sucesso!");
+                  } else {
+                    alert(
+                      "Erro ao salvar blocos: " +
+                        (data.error || "Erro desconhecido")
+                    );
+                  }
+                })
+                .catch((error) => {
+                  alert("Erro na comunicação ao salvar: " + error);
+                });
+            } catch (e) {
+              alert("Erro ao serializar os blocos: " + e);
+              console.error("Erro ao serializar blocos (save-btn):", e);
+            }
+          });
+
+        // Carregar blocos
+        document
+          .getElementById("load-btn")
+          .addEventListener("click", function () {
+            console.log(
+              "Botão 'Carregar Blocos' clicado. Verificando Blockly.Xml..."
+            );
+            console.log("typeof Blockly:", typeof Blockly);
+            if (typeof Blockly !== "undefined") {
+              console.log("typeof Blockly.Xml:", typeof Blockly.Xml);
+              if (typeof Blockly.Xml !== "undefined") {
+                console.log(
+                  "typeof Blockly.Xml.domToWorkspace:",
+                  typeof Blockly.Xml.domToWorkspace
+                );
+              }
+              console.log("typeof Blockly.utils:", typeof Blockly.utils);
+              if (typeof Blockly.utils !== "undefined") {
+                console.log(
+                  "typeof Blockly.utils.xml:",
+                  typeof Blockly.utils.xml
+                );
+                if (typeof Blockly.utils.xml !== "undefined") {
+                  console.log(
+                    "typeof Blockly.utils.xml.textToDom:",
+                    typeof Blockly.utils.xml.textToDom
+                  );
+                }
+              }
+            }
+
+            fetch("/load")
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success && data.blocks) {
+                  if (
+                    typeof Blockly === "undefined" ||
+                    typeof Blockly.Xml === "undefined" ||
+                    typeof Blockly.utils === "undefined" ||
+                    typeof Blockly.utils.xml === "undefined" ||
+                    typeof Blockly.utils.xml.textToDom !== "function" ||
+                    typeof Blockly.Xml.domToWorkspace !== "function"
+                  ) {
+                    let errorMsg =
+                      "Erro: Funções essenciais do Blockly para carregar XML não estão disponíveis.";
+                    console.error(
+                      errorMsg,
+                      "Blockly:",
+                      Blockly,
+                      "Blockly.Xml:",
+                      Blockly && Blockly.Xml,
+                      "Blockly.utils.xml:",
+                      Blockly && Blockly.utils && Blockly.utils.xml
+                    );
+                    alert(errorMsg);
+                    return;
+                  }
+                  try {
+                    workspace.clear();
+                    var xml = Blockly.utils.xml.textToDom(data.blocks);
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                    alert("Blocos carregados com sucesso!");
+                    updateGeneratedJson();
+                  } catch (e) {
+                    alert("Erro ao carregar blocos para o workspace: " + e);
+                    console.error(
+                      "Erro detalhado ao carregar blocos para o workspace (load-btn):",
+                      e
+                    );
+                    workspace.clear();
+                  }
+                } else {
+                  alert(
+                    data.error ||
+                      "Nenhum bloco salvo encontrado ou falha ao carregar."
+                  );
+                }
+              })
+              .catch((error) => {
+                alert("Erro na comunicação ao carregar: " + error);
+                console.error("Erro de fetch ao carregar blocos:", error);
+              });
+          });
+
+        // Adicionar blocos padrão ao carregar
+        var defaultBlocksXml = `
       <xml xmlns="https://developers.google.com/blockly/xml">
         <block type="movimento_sequence" id="default_movimento" x="50" y="50">
           <field name="FPS">12</field>
@@ -409,42 +535,74 @@
         </block>
       </xml>
       `;
-      console.log("Verificando Blockly e Blockly.Xml antes de carregar blocos padrão (dentro do window.onload):");
-      console.log("Blockly:", typeof Blockly);
-      if (typeof Blockly !== 'undefined') {
+        console.log(
+          "Verificando Blockly e Blockly.Xml antes de carregar blocos padrão (dentro do window.onload):"
+        );
+        console.log("Blockly:", typeof Blockly);
+        if (typeof Blockly !== "undefined") {
           console.log("Blockly.Xml:", typeof Blockly.Xml);
-          if (typeof Blockly.Xml !== 'undefined') {
-              console.log("Blockly.Xml.domToWorkspace:", typeof Blockly.Xml.domToWorkspace);
+          if (typeof Blockly.Xml !== "undefined") {
+            console.log(
+              "Blockly.Xml.domToWorkspace:",
+              typeof Blockly.Xml.domToWorkspace
+            );
           }
           console.log("Blockly.utils:", typeof Blockly.utils);
-          if (typeof Blockly.utils !== 'undefined') {
-              console.log("Blockly.utils.xml:", typeof Blockly.utils.xml);
-              if (typeof Blockly.utils.xml !== 'undefined') {
-                  console.log("Blockly.utils.xml.textToDom:", typeof Blockly.utils.xml.textToDom);
-              }
+          if (typeof Blockly.utils !== "undefined") {
+            console.log("Blockly.utils.xml:", typeof Blockly.utils.xml);
+            if (typeof Blockly.utils.xml !== "undefined") {
+              console.log(
+                "Blockly.utils.xml.textToDom:",
+                typeof Blockly.utils.xml.textToDom
+              );
+            }
           }
-      }
+        }
 
-      try {
-          if (typeof Blockly !== 'undefined' && 
-              typeof Blockly.Xml !== 'undefined' && 
-              typeof Blockly.utils !== 'undefined' && 
-              typeof Blockly.utils.xml !== 'undefined' && 
-              typeof Blockly.utils.xml.textToDom === 'function' &&
-              typeof Blockly.Xml.domToWorkspace === 'function') {
-              var xml = Blockly.utils.xml.textToDom(defaultBlocksXml);
-              Blockly.Xml.domToWorkspace(xml, workspace);
+        try {
+          if (
+            typeof Blockly !== "undefined" &&
+            typeof Blockly.Xml !== "undefined" &&
+            typeof Blockly.utils !== "undefined" &&
+            typeof Blockly.utils.xml !== "undefined" &&
+            typeof Blockly.utils.xml.textToDom === "function" &&
+            typeof Blockly.Xml.domToWorkspace === "function"
+          ) {
+            var xml = Blockly.utils.xml.textToDom(defaultBlocksXml);
+            Blockly.Xml.domToWorkspace(xml, workspace);
           } else {
-              console.error("Funções XML do Blockly (textToDom ou domToWorkspace) não estão disponíveis. Não foi possível carregar blocos padrão.");
-              alert("Alerta: Não foi possível carregar os blocos padrão iniciais devido à falta de funções XML do Blockly.");
+            console.error(
+              "Funções XML do Blockly (textToDom ou domToWorkspace) não estão disponíveis. Não foi possível carregar blocos padrão."
+            );
+            alert(
+              "Alerta: Não foi possível carregar os blocos padrão iniciais devido à falta de funções XML do Blockly."
+            );
           }
-      } catch (e) {
-          console.error("Erro ao carregar blocos padrão (dentro do try-catch principal):", e);
-          alert("Alerta: Erro ao tentar carregar os blocos padrão iniciais: " + e.message);
-      }
+        } catch (e) {
+          console.error(
+            "Erro ao carregar blocos padrão (dentro do try-catch principal):",
+            e
+          );
+          alert(
+            "Alerta: Erro ao tentar carregar os blocos padrão iniciais: " +
+              e.message
+          );
+        }
 
-      updateGeneratedJson(); // Atualiza o JSON ao carregar a página e após adicionar blocos padrão
-    }); // Fim do window.addEventListener('load', ...)
-  </script>
-</body>
+        updateGeneratedJson(); // Atualiza o JSON ao carregar a página e após adicionar blocos padrão
+      }); // Fim do window.addEventListener('load', ...)
+    </script>
+    <div id="button-container">
+      <div>
+        <button id="save-btn">Save blocks</button>
+        <button id="load-btn">Load Blocks</button>
+        <button id="clear-btn">Clean Blocks</button>
+      </div>
+      <div>
+        <button id="execute-btn">Send to the robot</button>
+        <button>Add Background</button>
+        <button>Add Soundtrack</button>
+      </div>
+    </div>
+  </body>
 </html>
