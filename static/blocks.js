@@ -1,54 +1,52 @@
-console.log('Tentando carregar blocks.js...');
+console.log("Tentando carregar blocks.js...");
 
-Blockly.Blocks['robo_pose'] = {
-  init: function() {
+Blockly.Blocks["robo_pose"] = {
+  init: function () {
+    this.appendDummyInput().appendField("Robot");
     this.appendDummyInput()
-        .appendField("Robo");
+      .appendField("X")
+      .appendField(new Blockly.FieldNumber(0), "X");
     this.appendDummyInput()
-        .appendField("X")
-        .appendField(new Blockly.FieldNumber(0), "X");
+      .appendField("Y")
+      .appendField(new Blockly.FieldNumber(0), "Y");
     this.appendDummyInput()
-        .appendField("Y")
-        .appendField(new Blockly.FieldNumber(0), "Y");
+      .appendField("Right Arm")
+      .appendField(new Blockly.FieldNumber(0), "BDireito");
     this.appendDummyInput()
-        .appendField("Braço Direito")
-        .appendField(new Blockly.FieldNumber(0), "BDireito");
+      .appendField("Left Arm")
+      .appendField(new Blockly.FieldNumber(0), "BEsquerdo");
     this.appendDummyInput()
-        .appendField("Braço Esquerdo")
-        .appendField(new Blockly.FieldNumber(0), "BEsquerdo");
+      .appendField("Right Leg")
+      .appendField(new Blockly.FieldNumber(0), "PDireito");
     this.appendDummyInput()
-        .appendField("Perna Direita")
-        .appendField(new Blockly.FieldNumber(0), "PDireito");
-    this.appendDummyInput()
-        .appendField("Perna Esquerda")
-        .appendField(new Blockly.FieldNumber(0), "PEsquerdo");
+      .appendField("Left Leg")
+      .appendField(new Blockly.FieldNumber(0), "PEsquerdo");
     this.setOutput(true, "RoboPose");
     this.setColour(230);
-    this.setTooltip("Define a pose do robô.");
+    this.setTooltip("Make the robot position.");
     this.setHelpUrl("");
-  }
+  },
 };
 
-Blockly.Blocks['movimento_sequence'] = {
-  init: function() {
+Blockly.Blocks["movimento_sequence"] = {
+  init: function () {
+    this.appendDummyInput().appendField("Movement");
     this.appendDummyInput()
-        .appendField("Movimento");
+      .appendField("FPS")
+      .appendField(new Blockly.FieldNumber(12, 1), "FPS");
     this.appendDummyInput()
-        .appendField("FPS")
-        .appendField(new Blockly.FieldNumber(12, 1), "FPS");
-    this.appendDummyInput()
-        .appendField("Duração (ms)") // Alterado de "Duração (s)" para "Duração (ms)" para corresponder ao gerador
-        .appendField(new Blockly.FieldNumber(150, 0), "Duracao");
+      .appendField("Duration (ms)") // Alterado de "Duração (s)" para "Duração (ms)" para corresponder ao gerador
+      .appendField(new Blockly.FieldNumber(150, 0), "Duracao");
     this.appendValueInput("Inicio")
-        .setCheck("RoboPose")
-        .appendField("Pose Inicial");
+      .setCheck("RoboPose")
+      .appendField("Initial Position");
     this.appendValueInput("Fim")
-        .setCheck("RoboPose")
-        .appendField("Pose Final");
+      .setCheck("RoboPose")
+      .appendField("Final Position");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(120);
-    this.setTooltip("Define uma sequência de movimento.");
+    this.setTooltip("Make a movement sequence.");
     this.setHelpUrl("");
-  }
+  },
 };
