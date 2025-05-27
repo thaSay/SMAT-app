@@ -131,21 +131,10 @@
 
     <div id="main-container">
       <div id="blockly-container"></div>
-      <div id="output-column">
-        <div id="code-output-container" style="display: none">
-          <h3>JSON Gerado:</h3>
-          <pre id="code-output"></pre>
-        </div>
-        <div id="program-output-container">
-          <h3>Instructions sended to the robot:</h3>
-          <pre id="program-output"></pre>
-        </div>
-        <div id="result-container">
-          <h3>Video result:</h3>
-          <pre id="result-output" style="color: red">
- TODO: this screen will have a loading icon each time a new frame is added, and a pic preview with the current state of the video</pre
-          >
-        </div>
+      <!-- A <div id="output-column"> foi removida daqui -->
+      <div id="code-output-container" style="display: none"> <!-- Mantido para lógica interna do JSON -->
+        <h3>JSON Gerado:</h3>
+        <pre id="code-output"></pre>
       </div>
     </div>
 
@@ -230,17 +219,20 @@
           .getElementById("execute-btn")
           .addEventListener("click", function () {
             var jsonOutput = document.getElementById("code-output").textContent;
-            var outputDiv = document.getElementById("program-output");
-            outputDiv.textContent = "Processando...\n";
+            // var outputDiv = document.getElementById("program-output"); // Não é mais usado para display no HTML
+            // outputDiv.textContent = "Processando...\n"; // Não é mais usado para display no HTML
+            console.log("Botão Executar pressionado. JSON para enviar:", jsonOutput);
 
             let dataToSend;
             try {
               dataToSend = JSON.parse(jsonOutput);
             } catch (error) {
-              outputDiv.textContent =
-                "Erro de parsing no JSON gerado: " +
-                error +
-                '\nVerifique a área "JSON Gerado".';
+              // outputDiv.textContent = // Não é mais usado para display no HTML
+              //   "Erro de parsing no JSON gerado: " +
+              //   error +
+              //   '\nVerifique a área "JSON Gerado".';
+              alert("Erro de parsing no JSON gerado: " + error + '\nVerifique a área "JSON Gerado" (oculta).');
+              console.error("Erro de parsing no JSON:", error);
               return;
             }
 
@@ -250,82 +242,50 @@
               typeof window.pywebview.api !== "undefined" &&
               typeof window.pywebview.api.handle_robot_data === "function"
             ) {
-              outputDiv.textContent +=
-                "Enviando dados para a interface Python nativa...\n";
+              // outputDiv.textContent += // Não é mais usado para display no HTML
+              //   "Enviando dados para a interface Python nativa...\n";
+              console.log("Enviando dados para a interface Python nativa (PyQt)...");
               // Chama a função Python exposta pela API do PyWebView
               window.pywebview.api
                 .handle_robot_data(dataToSend)
                 .then(function (response) {
                   console.log("Resposta da API Python: ", response);
-                  outputDiv.textContent +=
-                    "Resposta da API Python: " +
-                    JSON.stringify(response) +
-                    "\n";
-                  // A janela PyWebView será fechada pelo Python se a chamada for bem-sucedida
+                  // outputDiv.textContent += // Não é mais usado para display no HTML
+                  //   "Resposta da API Python: " +
+                  //   JSON.stringify(response) +
+                  //   "\n";
+                  if (response && response.status === "success") {
+                    console.log("Dados enviados com sucesso para a UI Python.");
+                  } else {
+                    console.error("Falha ao enviar dados para UI Python ou resposta inesperada:", response);
+                    alert("Falha ao enviar dados para UI Python: " + (response ? response.message : "Erro desconhecido"));
+                  }
                 })
                 .catch(function (error) {
                   console.error("Erro ao chamar API Python: ", error);
-                  outputDiv.textContent +=
-                    "Erro ao comunicar com a API Python: " + error + "\n";
-                  // Fallback para fetch se a chamada da API falhar por algum motivo inesperado
-                  executeFetchFallback(dataToSend, outputDiv);
+                  // outputDiv.textContent += // Não é mais usado para display no HTML
+                  //   "Erro ao comunicar com a API Python: " + error + "\n";
+                  alert("Erro ao comunicar com a API Python: " + error);
+                  // Não haverá fallback para fetch se a UI Python for o destino principal
                 });
             } else {
-              // Fallback: Se a API não estiver disponível (ex: rodando em navegador comum), usa fetch
-              outputDiv.textContent +=
-                "API Python não detectada. Usando fetch para /execute...\n";
-              executeFetchFallback(dataToSend, outputDiv);
+              // Fallback: Se a API não estiver disponível
+              // outputDiv.textContent += // Não é mais usado para display no HTML
+              //   "API Python não detectada. Usando fetch para /execute...\n";
+              console.warn("API Python não detectada. A UI de controle do robô não será exibida/atualizada.");
+              alert("API Python não detectada. Funcionalidade de controle do robô indisponível.");
+              // A função executeFetchFallback pode ser removida ou mantida para outros propósitos,
+              // mas não será chamada a partir daqui se pywebview estiver presente.
+              // executeFetchFallback(dataToSend, outputDiv);
             }
           });
 
         // Função de fallback para enviar dados via fetch (comportamento original)
-        function executeFetchFallback(dataToSend, outputDiv) {
-          outputDiv.textContent += "Enviando para o servidor via fetch...\n";
-          fetch("/execute", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(dataToSend),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                outputDiv.textContent =
-                  "Sucesso (via fetch):\n" + data.message + "\n";
-                if (
-                  data.processed_output &&
-                  Array.isArray(data.processed_output)
-                ) {
-                  outputDiv.textContent +=
-                    "Saída do Processamento:\n" +
-                    data.processed_output
-                      .map((item) => JSON.stringify(item, null, 2))
-                      .join("\n---\n");
-                } else if (data.processed_output) {
-                  outputDiv.textContent +=
-                    "Saída do Processamento:\n" +
-                    JSON.stringify(data.processed_output, null, 2);
-                }
-                if (data.received_data) {
-                  outputDiv.textContent +=
-                    "\n\nDados Recebidos pelo Servidor:\n" +
-                    JSON.stringify(data.received_data, null, 2);
-                }
-              } else {
-                outputDiv.textContent =
-                  "Erro do Servidor (via fetch): " + data.error;
-                if (data.received_data) {
-                  outputDiv.textContent +=
-                    "\n\nDados Enviados (que causaram erro):\n" +
-                    JSON.stringify(data.received_data, null, 2);
-                }
-              }
-            })
-            .catch((error) => {
-              outputDiv.textContent =
-                "Erro na comunicação com o servidor (via fetch): " + error;
-            });
+        // Considere remover se não for mais necessária.
+        function executeFetchFallback(dataToSend, outputDivElement) { // outputDivElement pode ser null agora
+          console.log("Executando fallback com fetch (se aplicável)...");
+          // ... (código original do fetch, mas o outputDiv não deve ser usado se removido)
+          // Se mantiver, certifique-se de que outputDivElement é verificado.
         }
 
         // Limpar o workspace
@@ -334,7 +294,7 @@
           .addEventListener("click", function () {
             if (confirm("Tem certeza que deseja limpar todos os blocos?")) {
               workspace.clear();
-              document.getElementById("program-output").textContent = "";
+              // document.getElementById("program-output").textContent = ""; // Elemento removido
               document.getElementById("code-output").textContent = "[]"; // Limpa JSON para '[]'
             }
           });
