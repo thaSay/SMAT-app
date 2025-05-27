@@ -214,70 +214,43 @@
         }
         workspace.addChangeListener(updateGeneratedJson);
 
-        // Enviar para o Robô (Executar) - Modificado para usar a API Python se disponível
+        // Enviar para o Robô (Executar) - Modificado para usar endpoints Flask
         document
           .getElementById("execute-btn")
           .addEventListener("click", function () {
             var jsonOutput = document.getElementById("code-output").textContent;
-            // var outputDiv = document.getElementById("program-output"); // Não é mais usado para display no HTML
-            // outputDiv.textContent = "Processando...\n"; // Não é mais usado para display no HTML
             console.log("Botão Executar pressionado. JSON para enviar:", jsonOutput);
 
             let dataToSend;
             try {
               dataToSend = JSON.parse(jsonOutput);
             } catch (error) {
-              // outputDiv.textContent = // Não é mais usado para display no HTML
-              //   "Erro de parsing no JSON gerado: " +
-              //   error +
-              //   '\nVerifique a área "JSON Gerado".';
               alert("Erro de parsing no JSON gerado: " + error + '\nVerifique a área "JSON Gerado" (oculta).');
               console.error("Erro de parsing no JSON:", error);
               return;
             }
 
-            // Verifica se a API Python (pywebview) está disponível
-            if (
-              typeof window.pywebview !== "undefined" &&
-              typeof window.pywebview.api !== "undefined" &&
-              typeof window.pywebview.api.handle_robot_data === "function"
-            ) {
-              // outputDiv.textContent += // Não é mais usado para display no HTML
-              //   "Enviando dados para a interface Python nativa...\n";
-              console.log("Enviando dados para a interface Python nativa (PyQt)...");
-              // Chama a função Python exposta pela API do PyWebView
-              window.pywebview.api
-                .handle_robot_data(dataToSend)
-                .then(function (response) {
-                  console.log("Resposta da API Python: ", response);
-                  // outputDiv.textContent += // Não é mais usado para display no HTML
-                  //   "Resposta da API Python: " +
-                  //   JSON.stringify(response) +
-                  //   "\n";
-                  if (response && response.status === "success") {
-                    console.log("Dados enviados com sucesso para a UI Python.");
-                  } else {
-                    console.error("Falha ao enviar dados para UI Python ou resposta inesperada:", response);
-                    alert("Falha ao enviar dados para UI Python: " + (response ? response.message : "Erro desconhecido"));
-                  }
-                })
-                .catch(function (error) {
-                  console.error("Erro ao chamar API Python: ", error);
-                  // outputDiv.textContent += // Não é mais usado para display no HTML
-                  //   "Erro ao comunicar com a API Python: " + error + "\n";
-                  alert("Erro ao comunicar com a API Python: " + error);
-                  // Não haverá fallback para fetch se a UI Python for o destino principal
-                });
-            } else {
-              // Fallback: Se a API não estiver disponível
-              // outputDiv.textContent += // Não é mais usado para display no HTML
-              //   "API Python não detectada. Usando fetch para /execute...\n";
-              console.warn("API Python não detectada. A UI de controle do robô não será exibida/atualizada.");
-              alert("API Python não detectada. Funcionalidade de controle do robô indisponível.");
-              // A função executeFetchFallback pode ser removida ou mantida para outros propósitos,
-              // mas não será chamada a partir daqui se pywebview estiver presente.
-              // executeFetchFallback(dataToSend, outputDiv);
-            }
+            // Enviar dados via fetch para endpoint Flask
+            fetch("/execute", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ robot_data: dataToSend }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  console.log("Dados enviados com sucesso para o painel de controle.");
+                } else {
+                  console.error("Falha ao enviar dados:", data.error);
+                  alert("Falha ao enviar dados: " + (data.error || "Erro desconhecido"));
+                }
+              })
+              .catch((error) => {
+                console.error("Erro ao comunicar com o servidor:", error);
+                alert("Erro ao comunicar com o servidor: " + error);
+              });
           });
 
         // Função de fallback para enviar dados via fetch (comportamento original)
