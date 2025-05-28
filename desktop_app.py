@@ -7,9 +7,12 @@ import sys
 from app import app
 
 # Adicionado para PyQt5
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QTextEdit, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QTextEdit, QPushButton, QFileDialog, QProgressDialog, QMessageBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont # Para definir a fonte
+
+# Nosso render
+from render import VideoRenderer
 
 # Define uma porta para o Flask rodar, idealmente uma que não entre em conflito
 FLASK_PORT = 5001
@@ -41,10 +44,49 @@ class Api:
 
 api_instance = Api()
 
+def export_video(window, fps=24):
+    """
+    Exporta os frames como MP4
+
+    A verificação de se há frames para exportar é feita em render.py
+    """
+    
+    # Dialogo do processo
+    progress = QProgressDialog("Requisitando frames e renderizando vídeo...", "Cancelar", 0, 100, window)
+    progress.setWindowTitle("Progresso da Renderização")
+    progress.setWindowModality(Qt.WindowModal)
+    progress.setValue(0)
+    progress.show()
+
+    # Função de callback para retornar o progresso
+    def update_progress(value):
+        progress.setValue(int(value))
+        QApplication.processEvents()
+
+    # Inicia o renderizador
+    renderer = VideoRenderer()
+
+    # Renderiza os frames
+    success = renderer.render_video(fps = fps, update_callback=update_progress)
+
+    progress.setValue(100)
+    progress.close()
+
+    if success:
+        QMessageBox.information(
+            window, 
+            "Sucesso", 
+            f"Vídeo renderizado com sucesso!"
+        )
+        print("Video renderizado com sucesso!")
+
+    else:
+        QMessageBox.critical(window, "Erro", "Falha ao renderizar o vídeo")
+
 def create_robot_control_ui_pyqt(data):
     """Cria e exibe a interface de controle do robô com PyQt5."""
     # QApplication é gerenciado no bloco __main__
-    
+
     window = QWidget()
     window.setWindowTitle("Controle do Robô e Visualização - PyQt5")
     window.setGeometry(150, 150, 800, 600) # x, y, largura, altura
@@ -76,6 +118,12 @@ def create_robot_control_ui_pyqt(data):
     capture_button.clicked.connect(capture_and_display_image_pyqt)
     layout.addWidget(capture_button)
     
+    # Exportar video
+    export_video_button = QPushButton("Exportar Vídeo MP4")
+    fps = data.get("fps", 24)
+    export_video_button.clicked.connect(lambda: export_video(window, int(fps)))
+    layout.addWidget(export_video_button)
+
     def close_app_pyqt():
         print("Fechando aplicação PyQt.")
         window.close() # Fecha esta janela. Se for a última, o app pode sair.
