@@ -121,6 +121,49 @@
         margin-top: 0;
         margin-bottom: 5px;
       }
+
+      /* Help button styles */
+      #help-btn {
+        background-color: #2196F3;
+        border-radius: 50%;
+        font-weight: bold;
+        width: 40px;
+        height: 40px;
+      }
+      
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+      }
+      
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 70%;
+        max-width: 800px;
+      }
+      
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      
+      .close:hover {
+        color: black;
+      }
     </style>
   </head>
   <body>
@@ -591,6 +634,26 @@
 
         updateGeneratedJson(); // Atualiza o JSON ao carregar a página e após adicionar blocos padrão
       }); // Fim do window.addEventListener('load', ...)
+      // Help modal functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById("helpModal");
+        var btn = document.getElementById("help-btn");
+        var span = document.getElementsByClassName("close")[0];
+        
+        btn.onclick = function() {
+          modal.style.display = "block";
+        }
+        
+        span.onclick = function() {
+          modal.style.display = "none";
+        }
+        
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        }
+      });
     </script>
     <div id="button-container">
       <div>
@@ -602,6 +665,31 @@
         <button id="execute-btn">Send to the robot</button>
         <button>Add Background</button>
         <button>Add Soundtrack</button>
+        <button id="help-btn" title="Help">?</button>
+      </div>
+    </div>
+    <div id="helpModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>SMAT Application Help</h2>
+        <h3>Getting Started</h3>
+        <p>Welcome to the Stop Motion Animation Table application. This tool allows you to create robot animations using block programming.</p>
+        
+        <h3>Basic Usage</h3>
+        <ol>
+          <li><strong>Building Blocks:</strong> Drag blocks from the toolbox (left panel) to create your animation sequence.</li>
+          <li><strong>Robot Pose:</strong> Use the "Robot" block to define positions for different parts of the robot.</li>
+          <li><strong>Movement:</strong> Use the "Movement" block to create animations between two poses.</li>
+          <li><strong>Execution:</strong> Click "Send to the robot" to execute your animation.</li>
+        </ol>
+        
+        <h3>Block Types</h3>
+        <ul>
+          <li><strong>Robot:</strong> Defines the robot's position (X, Y) and joint angles.</li>
+          <li><strong>Movement:</strong> Creates a sequence between initial and final positions with specified duration and FPS.</li>
+        </ul>
+        
+        <p>For more detailed help and tutorials, please visit <a href="https://www.notion.so/Stop-Motion-Animation-Table-1d7efc552d9e808b9c6ceef3e1ebab2a" target="_blank">our blog</a>.</p>
       </div>
     </div>
   </body>
