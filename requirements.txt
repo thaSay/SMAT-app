@@ -1,7 +1,6 @@
 bottle==0.13.3
 cffi==1.17.1
 click==8.2.1
-clr_loader==0.2.7.post0
 colorama==0.4.6
 Flask==2.0.1
 itsdangerous==2.2.0
@@ -15,9 +14,7 @@ PyQt5-Qt5==5.15.2
 PyQt5_sip==12.17.0
 PyQtWebEngine==5.15.7
 PyQtWebEngine-Qt5==5.15.2
-pythonnet==3.0.5
 opencv-python
 requests
-pywebview==4.0.1
 QtPy==2.4.3
 Werkzeug==2.0.1
