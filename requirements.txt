@@ -16,6 +16,8 @@ PyQt5_sip==12.17.0
 PyQtWebEngine==5.15.7
 PyQtWebEngine-Qt5==5.15.2
 pythonnet==3.0.5
+opencv-python
+requests
 pywebview==4.0.1
 QtPy==2.4.3
 Werkzeug==2.0.1
