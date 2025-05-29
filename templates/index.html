@@ -212,65 +212,61 @@
             document.getElementById("code-output").textContent = "[]";
           }
         }
-        workspace.addChangeListener(updateGeneratedJson);
+        workspace.addChangeListener(updateGeneratedJson);        // Enviar para o Robô (Executar) - Modificado para usar endpoints Flask
+        function executeCode() {
+          var jsonOutput = document.getElementById("code-output").textContent;
+          console.log("Botão Executar pressionado. JSON para enviar:", jsonOutput);
 
-        // Enviar para o Robô (Executar) - Modificado para usar endpoints Flask
-        document
-          .getElementById("execute-btn")
-          .addEventListener("click", function () {
-            var jsonOutput = document.getElementById("code-output").textContent;
-            console.log("Botão Executar pressionado. JSON para enviar:", jsonOutput);
+          let dataToSend;
+          try {
+            dataToSend = JSON.parse(jsonOutput);
+          } catch (error) {
+            alert("Erro de parsing no JSON gerado: " + error + '\nVerifique a área "JSON Gerado" (oculta).');
+            console.error("Erro de parsing no JSON:", error);
+            return;
+          }
 
-            let dataToSend;
-            try {
-              dataToSend = JSON.parse(jsonOutput);
-            } catch (error) {
-              alert("Erro de parsing no JSON gerado: " + error + '\nVerifique a área "JSON Gerado" (oculta).');
-              console.error("Erro de parsing no JSON:", error);
-              return;
-            }
+          console.log("Dados que serão enviados:", dataToSend);
 
-            // Enviar dados via fetch para endpoint Flask
-            fetch("/execute", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ robot_data: dataToSend }),
+          // Enviar dados via fetch para endpoint Flask
+          fetch("/execute", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dataToSend),
+          })
+            .then((response) => {
+              console.log("Response do servidor recebida:", response);
+              return response.json();
             })
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.success) {
-                  console.log("Dados enviados com sucesso para o painel de controle.");
-                } else {
-                  console.error("Falha ao enviar dados:", data.error);
-                  alert("Falha ao enviar dados: " + (data.error || "Erro desconhecido"));
-                }
-              })
-              .catch((error) => {
-                console.error("Erro ao comunicar com o servidor:", error);
-                alert("Erro ao comunicar com o servidor: " + error);
-              });
-          });
-
-        // Função de fallback para enviar dados via fetch (comportamento original)
-        // Considere remover se não for mais necessária.
-        function executeFetchFallback(dataToSend, outputDivElement) { // outputDivElement pode ser null agora
-          console.log("Executando fallback com fetch (se aplicável)...");
-          // ... (código original do fetch, mas o outputDiv não deve ser usado se removido)
-          // Se mantiver, certifique-se de que outputDivElement é verificado.
-        }
+            .then((data) => {
+              console.log("Resposta completa do servidor:", data);
+              if (data.success) {
+                console.log("Dados enviados com sucesso para o painel de controle.");
+                console.log("Dados processados retornados:", data.processed_output);
+                console.log("Dados originais recebidos pelo servidor:", data.received_data);
+              } else {
+                console.error("Falha ao enviar dados:", data.error);
+                alert("Falha ao enviar dados: " + (data.error || "Erro desconhecido"));
+              }
+            })
+            .catch((error) => {
+              console.error("Erro ao comunicar com o servidor:", error);
+              alert("Erro ao comunicar com o servidor: " + error);
+            });
+        }// Adicionar listeners para os botões
+        document.getElementById("execute-btn").addEventListener("click", executeCode);
 
         // Limpar o workspace
-        document
-          .getElementById("clear-btn")
-          .addEventListener("click", function () {
-            if (confirm("Tem certeza que deseja limpar todos os blocos?")) {
-              workspace.clear();
-              // document.getElementById("program-output").textContent = ""; // Elemento removido
-              document.getElementById("code-output").textContent = "[]"; // Limpa JSON para '[]'
-            }
-          });
+        function clearWorkspace() {
+          if (confirm("Tem certeza que deseja limpar todos os blocos?")) {
+            workspace.clear();
+            document.getElementById("code-output").textContent = "[]"; // Limpa JSON para '[]'
+          }
+        }
+
+        document.getElementById("clear-btn").addEventListener("click", clearWorkspace);
 
         // Salvar blocos
         document

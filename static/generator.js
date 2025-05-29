@@ -9,7 +9,7 @@ Blockly.JavaScript['robo_pose'] = function(block) {
   var number_pdireito = block.getFieldValue('PDireito');
   var number_pesquerdo = block.getFieldValue('PEsquerdo');
   var roboPose = {
-    "X": number_x, // Estes já são retornados como números pelo getFieldValue
+    "X": number_x,
     "Y": number_y,
     "BDireito": number_bdireito,
     "BEsquerdo": number_besquerdo,
@@ -21,42 +21,27 @@ Blockly.JavaScript['robo_pose'] = function(block) {
 
 Blockly.JavaScript['movimento_sequence'] = function(block) {
   console.log('Gerador movimento_sequence chamado.');
-  var number_fps = block.getFieldValue('FPS'); // Já é número
-  var number_duracao = block.getFieldValue('Duracao'); // Já é número
-  var value_inicio_str = Blockly.JavaScript.valueToCode(block, 'Inicio', Blockly.JavaScript.ORDER_ATOMIC) || 'null';
-  var value_fim_str = Blockly.JavaScript.valueToCode(block, 'Fim', Blockly.JavaScript.ORDER_ATOMIC) || 'null';
+  var number_fps = block.getFieldValue('FPS');
+  var number_duracao = block.getFieldValue('Duracao');
+  var value_inicio = Blockly.JavaScript.valueToCode(block, 'Inicio', Blockly.JavaScript.ORDER_ATOMIC);
+  var value_fim = Blockly.JavaScript.valueToCode(block, 'Fim', Blockly.JavaScript.ORDER_ATOMIC);
   
-  let inicioObj = null;
-  try {
-    // Só tenta parsear se não for a string 'null' literalmente
-    if (value_inicio_str && value_inicio_str !== 'null') {
-      inicioObj = JSON.parse(value_inicio_str);
-    }
-  } catch (e) {
-    console.warn('Falha ao fazer parse da Pose Inicial JSON string:', value_inicio_str, e);
-    // inicioObj permanece null
-  }
-
-  let fimObj = null;
-  try {
-    // Só tenta parsear se não for a string 'null' literalmente
-    if (value_fim_str && value_fim_str !== 'null') {
-      fimObj = JSON.parse(value_fim_str);
-    }
-  } catch (e) {
-    console.warn('Falha ao fazer parse da Pose Final JSON string:', value_fim_str, e);
-    // fimObj permanece null
-  }
-
+  console.log('Dados do movimento_sequence:', {
+    fps: number_fps,
+    duracao: number_duracao,
+    inicio: value_inicio,
+    fim: value_fim
+  });
+  
   var movimento = {
-    "tipo": "movimento_sequence", // Adicionado campo "tipo"
+    "tipo": "movimento_sequence",
     "FPS": number_fps,
-    "Duracao": number_duracao,   // Chave alterada de "Duração" para "Duracao"
-    "Inicio": inicioObj,
-    "Fim": fimObj
+    "Duracao": number_duracao,
+    "Inicio": value_inicio ? JSON.parse(value_inicio) : {},
+    "Fim": value_fim ? JSON.parse(value_fim) : {}
   };
-  // Retorna apenas a string JSON. workspaceToCode irá concatenar múltiplas instâncias com \n\n.
-  return JSON.stringify(movimento, null, 2); 
+  
+  return JSON.stringify(movimento);
 };
 
 console.log('generator.js carregado e parseado completamente.');
