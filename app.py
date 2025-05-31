@@ -1,9 +1,19 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
+from datetime import datetime
 import os
 import json
+import threading
+from render import VideoRenderer
 
 app = Flask(__name__)
 global_robot_data = None  # Variável global para dados do robô
+global_video_renderer = VideoRenderer()
+current_control_data = {
+    "timestamp": datetime.now().isoformat(),
+    "json_data": None,
+    "video_result": "No video results yet",
+    "robot_image": "[Area to display robot image]"
+}
 
 @app.route('/')
 def index():
@@ -144,6 +154,14 @@ def execute():
         except Exception as pyqt_error:
             import traceback
             traceback.print_exc()
+        # Update the control data
+        global current_control_data
+        current_control_data = {
+            "timestamp": datetime.now().isoformat(),
+            "json_data": data,
+            "video_result": "Commands processed successfully",
+            "robot_image": current_control_data.get("robot_image", "[Area to display robot image]")
+        }
         return result
 
     except Exception as e:
@@ -172,6 +190,77 @@ def load():
             return jsonify({'success': False, 'error': 'Nenhum arquivo salvo encontrado'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/get_control_data')
+def get_control_data():
+    global current_control_data
+    return jsonify(current_control_data)
+
+@app.route('/api/capture_photo', methods=['POST'])
+def capture_photo():
+    # This would interface with camera/robot in the future
+    global current_control_data
+    current_control_data["timestamp"] = datetime.now().isoformat()
+    current_control_data["robot_image"] = f"Image captured at {datetime.now().strftime('%H:%M:%S')}"
+    return jsonify({"success": True, "message": current_control_data["robot_image"]})
+
+@app.route('/api/export_video', methods=['POST'])
+def export_video_endpoint():
+    global global_video_renderer
+    
+    try:
+        # Try to get JSON data if present
+        data = request.get_json(silent=True) or {}
+        fps = data.get('fps', 24)
+        
+        # Start export in background thread
+        def run_export():
+            try:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_filename = f"smat_animation_{timestamp}.mp4"
+                
+                if not global_video_renderer.request_frames():
+                    global_video_renderer.progress = 0
+                    global_video_renderer.export_in_progress = False
+                    app.logger.error("No frames available for video export")
+                    return
+                    
+                global_video_renderer.render_video(fps=fps, output_filename=output_filename)
+            except Exception as e:
+                app.logger.error(f"Error in export thread: {e}")
+                global_video_renderer.export_in_progress = False
+                global_video_renderer.progress = 0
+        
+        # Start rendering in a background thread
+        thread = threading.Thread(target=run_export)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({"success": True, "message": "Video export started"})
+    except Exception as e:
+        app.logger.error(f"Error starting video export: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/export_progress')
+def export_progress():
+    global global_video_renderer
+    return jsonify(global_video_renderer.get_progress())
+
+@app.route('/api/close_application', methods=['POST'])
+def close_application():
+    # This will only work in the desktop app context
+    try:
+        if app.main_window_ref and callable(app.main_window_ref):
+            app_window = app.main_window_ref()
+            if app_window:
+                # Schedule closing the window
+                from PyQt5.QtCore import QTimer
+                QTimer.singleShot(500, app_window.close)
+                return jsonify({"success": True})
+    except Exception as e:
+        app.logger.error(f"Error closing application: {e}", exc_info=True)
+    
+    return jsonify({"success": False, "error": "Cannot close - not running in desktop mode"})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
