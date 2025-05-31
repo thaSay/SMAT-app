@@ -4,6 +4,9 @@ Blockly.Blocks["robo_pose"] = {
   init: function () {
     this.appendDummyInput().appendField("Robot");
     this.appendDummyInput()
+      .appendField("Own Axis")
+      .appendField(new Blockly.FieldNumber(0), "OwnAxis");
+    this.appendDummyInput()
       .appendField("X")
       .appendField(new Blockly.FieldNumber(0), "X");
     this.appendDummyInput()

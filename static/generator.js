@@ -1,14 +1,39 @@
 console.log('Tentando carregar generator.js...');
+/**
+ * 
+{
+  "command": [
+    {
+      "X": 0,
+      "Y": 0,
+      "BDireito": 0,
+      "BEsquerdo": 0,
+      "PDireito": 0,
+      "PEsquerdo": 0
+    },
+    {
+      "X": 1,
+      "Y": 1,
+      "BDireito": 1,
+      "BEsquerdo": 0,
+      "PDireito": 0,
+      "PEsquerdo": 1
+    }
+  ]
+}
+ */
 
 Blockly.JavaScript['robo_pose'] = function(block) {
   console.log('Gerador robo_pose chamado.');
   var number_x = block.getFieldValue('X');
   var number_y = block.getFieldValue('Y');
+  var number_ownaxis = block.getFieldValue('OwnAxis');
   var number_bdireito = block.getFieldValue('BDireito');
   var number_besquerdo = block.getFieldValue('BEsquerdo');
   var number_pdireito = block.getFieldValue('PDireito');
   var number_pesquerdo = block.getFieldValue('PEsquerdo');
   var roboPose = {
+    "OwnAxis": number_ownaxis,
     "X": number_x,
     "Y": number_y,
     "BDireito": number_bdireito,
