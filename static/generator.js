@@ -1,27 +1,4 @@
 console.log('Tentando carregar generator.js...');
-/**
- * 
-{
-  "command": [
-    {
-      "X": 0,
-      "Y": 0,
-      "BDireito": 0,
-      "BEsquerdo": 0,
-      "PDireito": 0,
-      "PEsquerdo": 0
-    },
-    {
-      "X": 1,
-      "Y": 1,
-      "BDireito": 1,
-      "BEsquerdo": 0,
-      "PDireito": 0,
-      "PEsquerdo": 1
-    }
-  ]
-}
- */
 
 Blockly.JavaScript['robo_pose'] = function(block) {
   console.log('Gerador robo_pose chamado.');

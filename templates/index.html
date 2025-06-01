@@ -789,13 +789,18 @@
           exportProgressContainer.style.display = 'block';
           exportProgressBar.style.width = '0%';
           exportProgressText.textContent = '0%';
+
+          var jsonInfo = document.getElementById("code-output").textContent;
+          dataToSend = JSON.parse(jsonInfo);
           
           // Start export process
           fetch('/api/export_video', { 
             method: 'POST',
             headers: {
-              'Accept': 'application/json'
-            }
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify(dataToSend),
           })
           .then(response => {
             if (!response.ok) {

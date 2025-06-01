@@ -4,6 +4,9 @@ import os
 import json
 import threading
 from render import VideoRenderer
+import requests
+import cv2
+import numpy as np
 
 app = Flask(__name__)
 global_robot_data = None  # Variável global para dados do robô
@@ -95,16 +98,45 @@ def execute():
                     sequence_frames.append(dict(start_pose))
                 else:
                     duration_s = duration_ms / 1000.0
-                    sequence_frames.append(dict(start_pose))
+                    # sequence_frames.append(dict(start_pose))
 
-                    time_at_photo_tick = 1.0 / fps
-                    while time_at_photo_tick < duration_s:
-                        factor = min(time_at_photo_tick / duration_s, 1.0)
-                        sequence_frames.append(interpolate_pose(start_pose, end_pose, factor))
-                        time_at_photo_tick += (1.0 / fps)
+
+                    frames = int(duration_s*fps)
+
+                    for f_index in range(frames):
+                        frame_dict = {}
+
+                        distOwnAxis = end_pose['OwnAxis']-start_pose['OwnAxis']
+                        frame_dict['OwnAxis'] = f_index*distOwnAxis/(frames-1)+start_pose['OwnAxis']               
+
+                        distX = end_pose['X']-start_pose['X']
+                        frame_dict['X'] = f_index*distX/(frames-1)+start_pose['X']                      
+                        
+                        distY = end_pose['Y']-start_pose['Y']
+                        frame_dict['Y'] =f_index*distY/(frames-1)+start_pose['Y']                    
+                        
+                        distBDireito = end_pose['BDireito']-start_pose['BDireito']
+                        frame_dict['BDireito'] = f_index*distBDireito/(frames-1)+start_pose['BDireito']                      
+                        
+                        distBEsquerdo = end_pose['BEsquerdo']-start_pose['BEsquerdo']
+                        frame_dict['BEsquerdo'] = f_index*distBEsquerdo/(frames-1)+start_pose['BEsquerdo']                     
+                        
+                        distPDireito = end_pose['PDireito']-start_pose['PDireito']
+                        frame_dict['PDireito'] = f_index*distPDireito/(frames-1)+start_pose['PDireito']                     
+                        
+                        distPEsquerdo = end_pose['PEsquerdo']-start_pose['PEsquerdo']
+                        frame_dict['PEsquerdo'] = f_index*distPEsquerdo/(frames-1)+start_pose['PEsquerdo']                      
+                        
+                        sequence_frames.append(frame_dict)
+
+                    # time_at_photo_tick = 1.0 / fps
+                    # while time_at_photo_tick < duration_s:
+                    #     factor = min(time_at_photo_tick / duration_s, 1.0)
+                    #     sequence_frames.append(interpolate_pose(start_pose, end_pose, factor))
+                    #     time_at_photo_tick += (1.0 / fps)
                     
-                    if not sequence_frames or sequence_frames[-1] != end_pose:
-                        sequence_frames.append(dict(end_pose))
+                    # if not sequence_frames or sequence_frames[-1] != end_pose:
+                    #     sequence_frames.append(dict(end_pose))
 
                 logged_total_frames = len(sequence_frames)
                 
@@ -141,6 +173,8 @@ def execute():
             "processed_output": final_json_output_list,
             "received_data": data
         })
+
+
         
         try:
             global global_robot_data
@@ -154,14 +188,26 @@ def execute():
         except Exception as pyqt_error:
             import traceback
             traceback.print_exc()
+
         # Update the control data
         global current_control_data
         current_control_data = {
             "timestamp": datetime.now().isoformat(),
-            "json_data": data,
+            "json_data": final_json_output_list,
             "video_result": "Commands processed successfully",
             "robot_image": current_control_data.get("robot_image", "[Area to display robot image]")
         }
+
+        try:
+            url = "http://localhost:5001/frames"
+            payload = {"comando": final_json_output_list}
+            response = requests.post(url, json=payload)
+            print(response.status_code)  # Print the HTTP status code
+            print(response.text)
+        except Exception as pyqt_error:
+            import traceback
+            traceback.print_exc()
+
         return result
 
     except Exception as e:
@@ -210,8 +256,8 @@ def export_video_endpoint():
     
     try:
         # Try to get JSON data if present
-        data = request.get_json(silent=True) or {}
-        fps = data.get('fps', 24)
+        data = request.get_json()
+        fps = data.get('FPS', 24)
         
         # Start export in background thread
         def run_export():
@@ -261,6 +307,19 @@ def close_application():
         app.logger.error(f"Error closing application: {e}", exc_info=True)
     
     return jsonify({"success": False, "error": "Cannot close - not running in desktop mode"})
+
+@app.route('/api/frame_load', methods=['POST'])
+def frame_load():
+
+    file = request.files['file']
+    filename = file.filename
+    file.save(filename)
+
+    # nparr = np.fromstring(request.files['file'][1], np.uint8)
+    # image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # cv2.imwrite(filename, image)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
