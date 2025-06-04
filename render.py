@@ -132,6 +132,15 @@ class VideoRenderer:
                     logger.warning(f"Could not read frame: {frame_path}")
 
             video_writer.release()
+
+            from moviepy import VideoFileClip
+            clip = VideoFileClip('./output_videos/'+output_filename)
+            clip.write_videofile('./output_videos/'+output_filename, codec='libx264', audio_codec='aac')
+            clip.close()
+            
+            import shutil
+            shutil.copy('./output_videos/'+output_filename, './static/videos/display_video.mp4')
+
             logger.info(f"Video rendered successfully: {output_path}")
             self.export_in_progress = False
             return True

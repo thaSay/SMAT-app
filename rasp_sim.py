@@ -17,7 +17,7 @@ def frames():
     for block in blocks['comando']:
         i = blocks['comando'].index(block)
         # Create a black image
-        image = np.ones((512, 512, 3), np.uint8)* 255
+        image = np.full((512, 512, 3), [0, 255, 0], np.uint8)
 
         # Circle parameters
         coordinates = (256 + int(block['X']*10),
@@ -36,8 +36,6 @@ def frames():
         image_bytes = encoded_image.tobytes()
         files = {'file': (filename, image_bytes, 'image/jpeg')}
 
-
-
         url = "http://localhost:5000/api/frame_load"
         response = requests.post(url, files=files)
 
@@ -49,4 +47,3 @@ def frames():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
-

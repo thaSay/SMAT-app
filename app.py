@@ -44,6 +44,18 @@ def interpolate_pose(start_pose, end_pose, factor):
 
 @app.route('/execute', methods=['POST'])
 def execute():
+    import os, shutil
+    folder = './temp_frames/'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
     try:
         data = request.get_json()
 
@@ -242,13 +254,13 @@ def get_control_data():
     global current_control_data
     return jsonify(current_control_data)
 
-@app.route('/api/capture_photo', methods=['POST'])
-def capture_photo():
-    # This would interface with camera/robot in the future
-    global current_control_data
-    current_control_data["timestamp"] = datetime.now().isoformat()
-    current_control_data["robot_image"] = f"Image captured at {datetime.now().strftime('%H:%M:%S')}"
-    return jsonify({"success": True, "message": current_control_data["robot_image"]})
+# @app.route('/api/capture_photo', methods=['POST'])
+# def capture_photo():
+#     # This would interface with camera/robot in the future
+#     global current_control_data
+#     current_control_data["timestamp"] = datetime.now().isoformat()
+#     current_control_data["robot_image"] = f"Image captured at {datetime.now().strftime('%H:%M:%S')}"
+#     return jsonify({"success": True, "message": current_control_data["robot_image"]})
 
 @app.route('/api/export_video', methods=['POST'])
 def export_video_endpoint():
@@ -272,6 +284,12 @@ def export_video_endpoint():
                     return
                     
                 global_video_renderer.render_video(fps=fps, output_filename=output_filename)
+
+                # from moviepy import VideoFileClip
+                # clip = VideoFileClip(output_filename)
+                # clip.write_videofile(output_filename, codec='libx264', audio_codec='aac')
+                # clip.close()
+
             except Exception as e:
                 app.logger.error(f"Error in export thread: {e}")
                 global_video_renderer.export_in_progress = False
@@ -292,21 +310,18 @@ def export_progress():
     global global_video_renderer
     return jsonify(global_video_renderer.get_progress())
 
-@app.route('/api/close_application', methods=['POST'])
-def close_application():
-    # This will only work in the desktop app context
-    try:
-        if app.main_window_ref and callable(app.main_window_ref):
-            app_window = app.main_window_ref()
-            if app_window:
-                # Schedule closing the window
-                from PyQt5.QtCore import QTimer
-                QTimer.singleShot(500, app_window.close)
-                return jsonify({"success": True})
-    except Exception as e:
-        app.logger.error(f"Error closing application: {e}", exc_info=True)
-    
-    return jsonify({"success": False, "error": "Cannot close - not running in desktop mode"})
+@app.route('/api/delete_video', methods=['POST'])
+def delete_video():
+    import os
+    from os import listdir
+    from os.path import isfile, join
+    path = './output_videos'
+    onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+    onlyfiles.sort(reverse=True)
+
+    os.remove(path+ '/' + onlyfiles[0])
+
+    return jsonify({"success": True, "message": "Done." })
 
 @app.route('/api/frame_load', methods=['POST'])
 def frame_load():
@@ -315,11 +330,50 @@ def frame_load():
     filename = file.filename
     file.save(filename)
 
-    # nparr = np.fromstring(request.files['file'][1], np.uint8)
-    # image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+@app.route('/api/concat_videos', methods=['POST'])
+def concat_videos():
+    from moviepy import VideoFileClip, concatenate_videoclips
 
-    # cv2.imwrite(filename, image)
+    def concat_videos(video_paths, output_path):
+        """
+        Concatenates multiple video files into a single video.
 
+        Args:
+            video_paths: A list of paths to the video files to be concatenated.
+            output_path: The path where the concatenated video will be saved.
+        """
+        clips = [VideoFileClip(path) for path in video_paths]
+        final_clip = concatenate_videoclips(clips)
+        final_clip.write_videofile(output_path, codec='libx264')
+
+    path = './output_videos'
+
+    import os
+    from os import listdir
+    from os.path import isfile, join
+    from datetime import datetime
+    onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+    onlyfiles.sort()
+    lgth=len(onlyfiles)
+
+    if lgth < 2:
+        return jsonify({"success": False, "error": "There are not videos enought for this operation"})
+
+    video1_path = path + '/' + onlyfiles[lgth-2]  # Replace with your first video path
+    video2_path = path + '/' + onlyfiles[lgth-1]  # Replace with your second video path
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_filename = f"smat_animation_{timestamp}.mp4"
+    output_video_path = path + '/' +  output_filename  # Replace with your desired output path
+
+    concat_videos([video1_path, video2_path], output_video_path)
+    os.remove(video1_path)
+    os.remove(video2_path)
+
+    import shutil
+    shutil.copy(output_video_path, './static/videos/display_video.mp4')
+
+    return jsonify({"success": True, "message": "Done." })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

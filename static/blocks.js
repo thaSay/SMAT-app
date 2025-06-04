@@ -11,7 +11,7 @@ Blockly.Blocks["robo_pose"] = {
       .appendField(new Blockly.FieldNumber(0), "X");
     this.appendDummyInput()
       .appendField("Y")
-      .appendField(new Blockly.FieldNumber(0), "Y");
+      .appendField(new Blockly.FieldNumber(50), "Y");
     this.appendDummyInput()
       .appendField("Right Arm")
       .appendField(new Blockly.FieldNumber(0), "BDireito");
@@ -36,10 +36,10 @@ Blockly.Blocks["movimento_sequence"] = {
     this.appendDummyInput().appendField("Movement");
     this.appendDummyInput()
       .appendField("FPS")
-      .appendField(new Blockly.FieldNumber(12, 1), "FPS");
+      .appendField(new Blockly.FieldNumber(10, 1), "FPS");
     this.appendDummyInput()
       .appendField("Duration (ms)") // Alterado de "Duração (s)" para "Duração (ms)" para corresponder ao gerador
-      .appendField(new Blockly.FieldNumber(150, 0), "Duracao");
+      .appendField(new Blockly.FieldNumber(1000, 0), "Duracao");
     this.appendValueInput("Inicio")
       .setCheck("RoboPose")
       .appendField("Initial Position");
