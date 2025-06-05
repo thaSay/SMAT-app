@@ -76,8 +76,10 @@ class VideoRenderer:
         self.progress = 0
         
         # Verifica se o diretório temp está vazio
-        frame_files = sorted([f for f in os.listdir(self.temp_dir) 
-                             if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+        import re
+        frame_files = [f for f in os.listdir(self.temp_dir) 
+                             if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        frame_files = sorted(frame_files, key=lambda x: int(re.search(r'\d+', x).group()))
                           
         if not frame_files:
             logger.error("No frames found in temp directory. Cannot render video.")

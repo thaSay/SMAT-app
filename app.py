@@ -475,9 +475,9 @@ def remove_green_screen():
     clip.close()
 
     import shutil
-    shutil.copy(path + '/' +  output_filename, './static/videos/display_video.mp4')
+    shutil.copy('./output_videos/'+new_file_name, './static/videos/display_video.mp4')
 
     return jsonify({"success": True, "message": "Done." })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+        app.run(debug=True, port=5000)
