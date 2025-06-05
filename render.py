@@ -134,12 +134,17 @@ class VideoRenderer:
             video_writer.release()
 
             from moviepy import VideoFileClip
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            new_file_name = f"smat_animation_{timestamp}.mp4"
+
             clip = VideoFileClip('./output_videos/'+output_filename)
-            clip.write_videofile('./output_videos/'+output_filename, codec='libx264', audio_codec='aac')
+            clip.write_videofile('./output_videos/'+new_file_name, codec='libx264', audio_codec='aac')
             clip.close()
             
             import shutil
-            shutil.copy('./output_videos/'+output_filename, './static/videos/display_video.mp4')
+            shutil.copy('./output_videos/'+new_file_name, './static/videos/display_video.mp4')
+            # os.remove('./output_videos/'+output_filename)
 
             logger.info(f"Video rendered successfully: {output_path}")
             self.export_in_progress = False

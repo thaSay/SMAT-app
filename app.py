@@ -282,7 +282,7 @@ def export_video_endpoint():
                     global_video_renderer.export_in_progress = False
                     app.logger.error("No frames available for video export")
                     return
-                    
+                        
                 global_video_renderer.render_video(fps=fps, output_filename=output_filename)
 
                 # from moviepy import VideoFileClip
@@ -372,6 +372,110 @@ def concat_videos():
 
     import shutil
     shutil.copy(output_video_path, './static/videos/display_video.mp4')
+
+    return jsonify({"success": True, "message": "Done." })
+
+def process_green_screen_video(input_video_path, output_video_path, background_image_path=None):
+    if not os.path.exists(input_video_path):
+        return False
+    
+    background_image = None
+    if background_image_path and os.path.exists(background_image_path):
+        background_image = cv2.imread(background_image_path)
+    
+    cap = cv2.VideoCapture(input_video_path)
+    if not cap.isOpened():
+        return False
+    
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+    
+    if not out.isOpened():
+        cap.release()
+        return False
+    
+    lower_green = np.array([40, 50, 50])
+    upper_green = np.array([80, 255, 255])
+    chroma_lower = np.array([40, 70, 40])
+    chroma_upper = np.array([80, 255, 255])
+    kernel = np.ones((3,3), np.uint8)
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        
+        mask = cv2.inRange(hsv_frame, lower_green, upper_green)
+        chroma_mask = cv2.inRange(hsv_frame, chroma_lower, chroma_upper)
+        mask = cv2.bitwise_or(mask, chroma_mask)
+        
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.GaussianBlur(mask, (5, 5), 0)
+        
+        mask_inv = cv2.bitwise_not(mask)
+        
+        if background_image is not None:
+            background_resized = cv2.resize(background_image, (frame.shape[1], frame.shape[0]))
+            foreground = cv2.bitwise_and(frame, frame, mask=mask_inv)
+            background_masked = cv2.bitwise_and(background_resized, background_resized, mask=mask)
+            result = cv2.add(foreground, background_masked)
+        else:
+            result = cv2.bitwise_and(frame, frame, mask=mask_inv)
+        
+        out.write(result)
+    
+    cap.release()
+    out.release()
+    return True
+
+@app.route('/api/remove_background', methods=['POST'])
+def remove_green_screen():
+    import os
+    from os import listdir
+    from os.path import isfile, join
+
+    if 'arquivo' not in request.files:
+        return {'erro': 'Nenhum arquivo encontrado'}, 400
+
+    file = request.files['arquivo']
+    if file.filename == '':
+        return {'erro': 'Nenhum arquivo selecionado'}, 400
+
+    filepath = os.path.join('background', file.filename)
+    file.save(filepath)
+
+    path = './output_videos'
+    onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+    onlyfiles.sort(reverse=True)
+
+    input_path = path+ '/' + onlyfiles[0]
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_filename = f"smat_animation_{timestamp}.mp4"
+    output_video_path = path + '/' +  output_filename  # Replace with your desired output path
+
+    process_green_screen_video(input_path, output_video_path, background_image_path='./background/'+ file.filename)
+
+    os.remove(input_path)
+
+    from moviepy import VideoFileClip
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    new_file_name = f"smat_animation_{timestamp}.mp4"
+
+    clip = VideoFileClip('./output_videos/'+output_filename)
+    clip.write_videofile('./output_videos/'+new_file_name, codec='libx264', audio_codec='aac')
+    clip.close()
+
+    import shutil
+    shutil.copy(path + '/' +  output_filename, './static/videos/display_video.mp4')
 
     return jsonify({"success": True, "message": "Done." })
 

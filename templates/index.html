@@ -90,6 +90,15 @@
         padding: 20px;
         background-color: #e0e0e0;
       }
+      #upload-file {
+        padding: 8px 16px;
+        background-color: #4a6ea9;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
       button {
         padding: 8px 16px;
         background-color: #4a6ea9;
@@ -981,6 +990,57 @@
               });
           }
         });
+
+        document
+          .getElementById("upload-file")
+          .addEventListener("click", openDialog);
+
+        document
+          .getElementById("fileid")
+          .addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+              const formData = new FormData();
+              formData.append("arquivo", file);
+
+              // Enviar via fetch
+              fetch("/api/remove_background", {
+                method: "POST",
+                body: formData,
+              })
+                .then((response) => response.text())
+                .then((result) => {
+                  console.log("Sucesso:", result);
+                  alert("Arquivo enviado com sucesso!");
+
+                  const placeholder = document.getElementById(
+                    "robot-image-placeholder"
+                  );
+                  const uniqueUrl =
+                    "{{url_for('static', filename='videos/display_video.mp4')}}" +
+                    "?t=" +
+                    new Date().getTime();
+
+                  placeholder.innerHTML = `
+                    <video class="video-player" width="640" controls>
+                      <source
+                        src="${uniqueUrl}"
+                        type="video/mp4"
+                      />
+                      Your browser does not support the video tag.
+                    </video>
+                          `;
+                })
+                .catch((error) => {
+                  console.error("Erro:", error);
+                  alert("Erro no envio do arquivo.");
+                });
+            }
+          });
+
+        function openDialog() {
+          document.getElementById("fileid").click();
+        }
       });
     </script>
     <div id="button-container">
@@ -991,7 +1051,10 @@
       </div>
       <div>
         <button id="execute-btn">Send to the robot</button>
-        <button>Add Background</button>
+
+        <input id="fileid" type="file" hidden />
+        <input id="upload-file" type="button" value="Add Background" />
+
         <button>Add Soundtrack</button>
         <button id="help-btn" title="Help">?</button>
       </div>
