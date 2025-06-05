@@ -18,3 +18,4 @@ opencv-python
 requests
 QtPy==2.4.3
 Werkzeug==2.0.1
+numpy
