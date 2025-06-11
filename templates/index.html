@@ -111,10 +111,13 @@
       button:hover {
         background-color: #3a5ea9;
       }
-      #execute-btn {
+      #convert-btn {
+        background-color: #ffb700;
+      }
+      #send-btn {
         background-color: #4caf50;
       }
-      #execute-btn:hover {
+      #send-btn:hover {
         background-color: #3a9140;
       }
       #clear-btn {
@@ -426,6 +429,39 @@
           }
         }
         workspace.addChangeListener(updateGeneratedJson); // Enviar para o Robô (Executar) - Modificado para usar endpoints Flask
+
+        const jsonDataDisplay = document.getElementById("json-data-display");
+
+        function updateData() {
+          fetch("/api/get_control_data")
+            .then((response) => response.json())
+            .then((data) => {
+              if (
+                data &&
+                data.timestamp &&
+                new Date(data.timestamp) > lastUpdate
+              ) {
+                lastUpdate = new Date(data.timestamp);
+                if (data.json_data) {
+                  jsonDataDisplay.textContent = JSON.stringify(
+                    data.json_data,
+                    null,
+                    2
+                  );
+                }
+                if (data.video_result) {
+                  videoResultDisplay.textContent = data.video_result;
+                }
+                if (data.robot_image) {
+                  robotImagePlaceholder.textContent = data.robot_image;
+                }
+              }
+            })
+            .catch((error) =>
+              console.error("Error fetching control data:", error)
+            );
+        }
+
         function executeCode() {
           var jsonOutput = document.getElementById("code-output").textContent;
           console.log(
@@ -458,9 +494,15 @@
           })
             .then((response) => {
               console.log("Response do servidor recebida:", response);
+
               return response.json();
             })
             .then((data) => {
+              jsonDataDisplay.textContent = JSON.stringify(
+                data.processed_output,
+                null,
+                2
+              );
               console.log("Resposta completa do servidor:", data);
               if (data.success) {
                 console.log(
@@ -488,8 +530,30 @@
             });
         } // Adicionar listeners para os botões
         document
-          .getElementById("execute-btn")
+          .getElementById("convert-btn")
           .addEventListener("click", executeCode);
+
+        function sendRobot() {
+          fetch("/api/send_robot", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(jsonDataDisplay.textContent),
+          })
+            .then((response) => {
+              console.log("Response do servidor recebida:", response);
+
+              return response.json();
+            })
+            .catch((error) => {
+              console.error("Erro ao comunicar com o servidor:", error);
+              alert("Erro ao comunicar com o servidor: " + error);
+            });
+        }
+        document
+          .getElementById("send-btn")
+          .addEventListener("click", sendRobot);
 
         // Limpar o workspace
         function clearWorkspace() {
@@ -811,38 +875,9 @@
         jsonDataDisplay.textContent = "No data received.";
 
         // Update data from server
-        function updateData() {
-          fetch("/api/get_control_data")
-            .then((response) => response.json())
-            .then((data) => {
-              if (
-                data &&
-                data.timestamp &&
-                new Date(data.timestamp) > lastUpdate
-              ) {
-                lastUpdate = new Date(data.timestamp);
-                if (data.json_data) {
-                  jsonDataDisplay.textContent = JSON.stringify(
-                    data.json_data,
-                    null,
-                    2
-                  );
-                }
-                if (data.video_result) {
-                  videoResultDisplay.textContent = data.video_result;
-                }
-                if (data.robot_image) {
-                  robotImagePlaceholder.textContent = data.robot_image;
-                }
-              }
-            })
-            .catch((error) =>
-              console.error("Error fetching control data:", error)
-            );
-        }
 
         // Start polling for updates
-        setInterval(updateData, pollingInterval);
+        // setInterval(updateData, pollingInterval);
 
         // Capture button click
         mergeButton.addEventListener("click", function () {
@@ -1054,12 +1089,13 @@
         <button id="clear-btn">Clean Blocks</button>
       </div>
       <div>
-        <button id="execute-btn">Send to the robot</button>
+        <button id="convert-btn">Convert blocks</button>
+        <button id="send-btn">Send to the robot</button>
 
         <input id="fileid" type="file" hidden />
         <input id="upload-file" type="button" value="Add Background" />
 
-        <button>Add Soundtrack</button>
+        <!-- <button>Add Soundtrack</button> -->
         <button id="help-btn" title="Help">?</button>
       </div>
     </div>

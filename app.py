@@ -44,17 +44,7 @@ def interpolate_pose(start_pose, end_pose, factor):
 
 @app.route('/execute', methods=['POST'])
 def execute():
-    import os, shutil
-    folder = './temp_frames/'
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
 
     try:
         data = request.get_json()
@@ -186,8 +176,6 @@ def execute():
             "received_data": data
         })
 
-
-        
         try:
             global global_robot_data
             # Enviar a resposta completa do endpoint para o PyQt
@@ -210,21 +198,67 @@ def execute():
             "robot_image": current_control_data.get("robot_image", "[Area to display robot image]")
         }
 
-        try:
-            url = "http://localhost:5001/frames"
-            payload = {"comando": final_json_output_list}
-            response = requests.post(url, json=payload)
-            print(response.status_code)  # Print the HTTP status code
-            print(response.text)
-        except Exception as pyqt_error:
-            import traceback
-            traceback.print_exc()
+        # try:
+        #     url = "http://localhost:5001/frames"
+        #     payload = {"comando": final_json_output_list}
+        #     response = requests.post(url, json=payload)
+        #     print(response.status_code)  # Print the HTTP status code
+        #     print(response.text)
+        # except Exception as pyqt_error:
+        #     import traceback
+        #     traceback.print_exc()
 
         return result
 
     except Exception as e:
         app.logger.error(f"Erro ao executar comandos: {e}", exc_info=True)
         return jsonify({"success": False, "error": str(e), "received_data": request.data.decode('utf-8', errors='ignore')}), 500
+
+@app.route('/api/send_robot', methods=['POST'])
+def send_robot():
+    import os, shutil
+    folder = './temp_frames/'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+    data = request.get_json()
+
+    if isinstance(data, str):
+        try:
+            data = json.loads(data.replace('\xa0', ' ').strip())
+        except json.JSONDecodeError as e:
+            return jsonify({"erro": "JSON inválido", "detalhes": str(e)}), 400
+    # import re
+    # data = request.get_json().replace('\xa0', ' ').strip()
+    # data = re.sub(r'[\n\r\t]', '', data)
+    # data = re.sub(r'\s+', ' ', data)
+
+    comandos = {"command": data}
+    with open("comandos.json", "w", encoding="utf-8") as f:
+        json.dump(comandos, f, ensure_ascii=False, indent=4)
+
+    with open("comandos.json", "rb") as f:
+        files = {'file': ("comandos.json", f, 'application/json')}
+
+        try:
+            ip = '192.168.127.18'
+            url = f'http://{ip}:5000/upload'
+            # payload = {"comando": comandos}
+            response = requests.post(url, files=files)
+            print(response.status_code)  # Print the HTTP status code
+            print(response.text)
+        except Exception as pyqt_error:
+            import traceback
+            response = traceback.print_exc()
+
+    return response
 
 @app.route('/save', methods=['POST'])
 def save():
@@ -329,6 +363,21 @@ def frame_load():
     file = request.files['file']
     filename = file.filename
     file.save(filename)
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'image' not in request.files:
+        return jsonify({'message': 'Nenhuma imagem recebida'}), 400
+
+    image = request.files['image']
+    command_index = request.form.get('command_index', 'unknown')
+
+    filename = f'command_{command_index}.jpg'
+    filepath = os.path.join('./temp_frames', filename)
+    image.save(filepath)
+
+    print(f"Imagem salva em {filepath}")
+    return jsonify({'message': f'Imagem recebida e salva como {filename}'}), 200
 
 @app.route('/api/concat_videos', methods=['POST'])
 def concat_videos():
@@ -550,4 +599,4 @@ def remove_green_screen():
     return jsonify({"success": True, "message": "Done." })
 
 if __name__ == '__main__':
-        app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=5000)
