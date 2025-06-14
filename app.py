@@ -248,7 +248,7 @@ def send_robot():
         files = {'file': ("comandos.json", f, 'application/json')}
 
         try:
-            ip = '192.168.127.18'
+            ip = '192.168.0.21'
             url = f'http://{ip}:5000/upload'
             # payload = {"comando": comandos}
             response = requests.post(url, files=files)
@@ -303,8 +303,19 @@ def export_video_endpoint():
     try:
         # Try to get JSON data if present
         data = request.get_json()
-        fps = data.get('FPS', 24)
-        
+
+        json_list = type(data) == list and len(data) > 0
+
+        # if type(data) != list or len(data) == 0:
+
+        # fps = data.get('FPS', 24)
+        fps = -1
+        fps_blocks = []
+        if json_list:
+            fps_blocks = global_video_renderer.convert_json_to_fps_blocks(data)
+        else:
+            fps = data.get('FPS', 12) if type(data) != list else 12
+
         # Start export in background thread
         def run_export():
             try:
@@ -316,8 +327,14 @@ def export_video_endpoint():
                     global_video_renderer.export_in_progress = False
                     app.logger.error("No frames available for video export")
                     return
-                        
-                global_video_renderer.render_video(fps=fps, output_filename=output_filename)
+
+                if json_list:      
+                    global_video_renderer.render_video_variable_fps(
+                    fps_blocks=fps_blocks,
+                    output_filename=output_filename
+                )
+                else:
+                    global_video_renderer.render_video(fps=fps, output_filename=output_filename)
 
                 # from moviepy import VideoFileClip
                 # clip = VideoFileClip(output_filename)
@@ -328,6 +345,8 @@ def export_video_endpoint():
                 app.logger.error(f"Error in export thread: {e}")
                 global_video_renderer.export_in_progress = False
                 global_video_renderer.progress = 0
+
+                return jsonify({"success": False, "error": str(e)}), 500
         
         # Start rendering in a background thread
         thread = threading.Thread(target=run_export)

@@ -6,6 +6,8 @@ import requests
 import logging
 from datetime import datetime
 from pathlib import Path
+from moviepy import ImageSequenceClip, concatenate_videoclips
+import re
 
 # Configura Logging (mantém o progresso da renderização)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -67,6 +69,16 @@ class VideoRenderer:
         # No frames found
         logger.warning("No frames found in temp directory")
         return False
+
+    def convert_json_to_fps_blocks(self, json_list):
+        fps_blocks = []
+        for item in json_list:
+            fps = item['FPS']
+            duracao_ms = item['Duracao']
+            duracao_s = duracao_ms / 1000.0
+            n_frames = round(fps * duracao_s)
+            fps_blocks.append( (fps, n_frames) )
+        return fps_blocks
 
     def render_video(self, fps=24, output_filename=None, update_callback=None):
         """
@@ -153,6 +165,87 @@ class VideoRenderer:
             return True
         except Exception as e:
             logger.error(f"Error rendering video: {e}")
+            self.export_in_progress = False
+            return False
+        
+
+    def render_video_variable_fps(self, fps_blocks, output_filename=None, update_callback=None):
+        """
+        Renderiza o video a partir dos frames na pasta, permitindo múltiplos fps em blocos.
+
+        fps_blocks: lista de tuplas (fps, num_frames) indicando quantos frames usar em cada fps.
+        """
+        self.export_in_progress = True
+        self.progress = 0
+
+        # Carregar e ordenar os frames
+        frame_files = [f for f in os.listdir(self.temp_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        frame_files = sorted(frame_files, key=lambda x: int(re.search(r'\d+', x).group()))
+        
+        total_frames = sum(count for _, count in fps_blocks)
+        if total_frames > len(frame_files):
+            logger.error("Número de frames insuficiente para os blocos solicitados.")
+            self.export_in_progress = False
+            return False
+
+        if not output_filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_filename = f"smat_animation_{timestamp}.mp4"
+
+        if not output_filename.endswith('.mp4'):
+            output_filename += '.mp4'
+
+        output_path = os.path.join(self.output_dir, output_filename)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        try:
+            clips = []
+            frame_index = 0
+            total_blocks = len(fps_blocks)
+            processed_blocks = 0
+
+            for fps, count in fps_blocks:
+                block_frames = []
+                for _ in range(count):
+                    frame_path = os.path.join(self.temp_dir, frame_files[frame_index])
+                    frame = cv2.imread(frame_path)
+                    if frame is None:
+                        logger.warning(f"Could not read frame: {frame_path}")
+                        continue
+                    block_frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                    frame_index += 1
+
+                if not block_frames:
+                    logger.warning(f"Nenhum frame válido no bloco de {fps}fps com {count} frames")
+                    continue
+
+                clip = ImageSequenceClip(block_frames, fps=fps)
+                clips.append(clip)
+
+                processed_blocks += 1
+                self.progress = int((processed_blocks / total_blocks) * 100)
+                if update_callback:
+                    update_callback(self.progress)
+                logger.info(f"Bloco {processed_blocks}/{total_blocks} processado ({self.progress}%)")
+
+            if not clips:
+                logger.error("Nenhum bloco válido foi gerado.")
+                self.export_in_progress = False
+                return False
+
+            final_clip = concatenate_videoclips(clips, method="compose")
+            final_clip.write_videofile(output_path, codec='libx264', audio_codec='aac')
+            final_clip.close()
+
+            # Copiar para destino final
+            shutil.copy(output_path, './static/videos/display_video.mp4')
+
+            logger.info(f"Video renderizado com sucesso: {output_path}")
+            self.export_in_progress = False
+            return True
+
+        except Exception as e:
+            logger.error(f"Erro ao renderizar video: {e}")
             self.export_in_progress = False
             return False
 
