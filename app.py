@@ -546,6 +546,28 @@ def process_green_screen_video(input_video_path, output_video_path, background_i
         # Máscaras booleanas para pixels verdes e não verdes
         not_green = w_mask <= 0.1
         is_green = ~not_green
+        i_top = 0
+        j_top = 0
+        i_low = 0
+        j_low = 0
+        for j in range(0, is_green.shape[0]):
+            for i in range(0, is_green.shape[1]):
+                if is_green[i][j]:
+                    i_top = i
+                    j_top = j
+                    break
+            if i_top:
+                break
+        
+        for j in range(is_green.shape[0] - 1, 0):
+            for i in range(is_green.shape[1] - 1, 0):
+                if is_green[i][j]:
+                    i_low = i
+                    j_low = j
+                    break
+            if i_low:
+                break
+
         
         # Para pixels não verdes: copia o pixel original
         result[not_green] = frame_float[not_green]
@@ -576,6 +598,9 @@ def process_green_screen_video(input_video_path, output_video_path, background_i
         # Converte de volta para uint8 para salvar no vídeo
         result = np.clip(result, 0, 255).astype(np.uint8)
         
+        
+        #print(i_top, i_low, j_top, j_low)
+        #result = result[i_top:i_low+1, j_top:j_low+1]
         out.write(result)
     
     cap.release()
