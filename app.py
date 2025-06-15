@@ -108,26 +108,26 @@ def execute():
                     for f_index in range(frames):
                         frame_dict = {}
 
-                        distOwnAxis = end_pose['OwnAxis']-start_pose['OwnAxis']
-                        frame_dict['OwnAxis'] = f_index*distOwnAxis/(frames-1)+start_pose['OwnAxis']               
+                        distOwnAxis = int(end_pose['OwnAxis']) - int(start_pose['OwnAxis'])
+                        frame_dict['OwnAxis'] = int(f_index * distOwnAxis / (frames - 1) + int(start_pose['OwnAxis']))
 
-                        distX = end_pose['X']-start_pose['X']
-                        frame_dict['X'] = f_index*distX/(frames-1)+start_pose['X']                      
-                        
-                        distY = end_pose['Y']-start_pose['Y']
-                        frame_dict['Y'] =f_index*distY/(frames-1)+start_pose['Y']                    
-                        
-                        distBDireito = end_pose['BDireito']-start_pose['BDireito']
-                        frame_dict['BDireito'] = f_index*distBDireito/(frames-1)+start_pose['BDireito']                      
-                        
-                        distBEsquerdo = end_pose['BEsquerdo']-start_pose['BEsquerdo']
-                        frame_dict['BEsquerdo'] = f_index*distBEsquerdo/(frames-1)+start_pose['BEsquerdo']                     
-                        
-                        distPDireito = end_pose['PDireito']-start_pose['PDireito']
-                        frame_dict['PDireito'] = f_index*distPDireito/(frames-1)+start_pose['PDireito']                     
-                        
-                        distPEsquerdo = end_pose['PEsquerdo']-start_pose['PEsquerdo']
-                        frame_dict['PEsquerdo'] = f_index*distPEsquerdo/(frames-1)+start_pose['PEsquerdo']                      
+                        distX = int(end_pose['X']) - int(start_pose['X'])
+                        frame_dict['X'] = int(f_index * distX / (frames - 1) + int(start_pose['X']))
+
+                        distY = int(end_pose['Y']) - int(start_pose['Y'])
+                        frame_dict['Y'] = int(f_index * distY / (frames - 1) + int(start_pose['Y']))
+
+                        distBDireito = int(end_pose['BDireito']) - int(start_pose['BDireito'])
+                        frame_dict['BDireito'] = int(f_index * distBDireito / (frames - 1) + int(start_pose['BDireito']))
+
+                        distBEsquerdo = int(end_pose['BEsquerdo']) - int(start_pose['BEsquerdo'])
+                        frame_dict['BEsquerdo'] = int(f_index * distBEsquerdo / (frames - 1) + int(start_pose['BEsquerdo']))
+
+                        distPDireito = int(end_pose['PDireito']) - int(start_pose['PDireito'])
+                        frame_dict['PDireito'] = int(f_index * distPDireito / (frames - 1) + int(start_pose['PDireito']))
+
+                        distPEsquerdo = int(end_pose['PEsquerdo']) - int(start_pose['PEsquerdo'])
+                        frame_dict['PEsquerdo'] = int(f_index * distPEsquerdo / (frames - 1) + int(start_pose['PEsquerdo']))
                         
                         sequence_frames.append(frame_dict)
 
@@ -216,49 +216,58 @@ def execute():
 
 @app.route('/api/send_robot', methods=['POST'])
 def send_robot():
-    import os, shutil
-    folder = './temp_frames/'
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
+    try:
+        # Get data directly without extra processing
+        data = request.get_json()
+        
+        # Prepare the command structure
+        comandos = {"command": data}
+        
+        # Save to a temporary file
+        with open("comandos.json", "w", encoding="utf-8") as f:
+            json.dump(comandos, f, ensure_ascii=False, indent=4)
+        
+        # Send to the Raspberry Pi server
         try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
-
-    data = request.get_json()
-
-    if isinstance(data, str):
-        try:
-            data = json.loads(data.replace('\xa0', ' ').strip())
-        except json.JSONDecodeError as e:
-            return jsonify({"erro": "JSON inválido", "detalhes": str(e)}), 400
-    # import re
-    # data = request.get_json().replace('\xa0', ' ').strip()
-    # data = re.sub(r'[\n\r\t]', '', data)
-    # data = re.sub(r'\s+', ' ', data)
-
-    comandos = {"command": data}
-    with open("comandos.json", "w", encoding="utf-8") as f:
-        json.dump(comandos, f, ensure_ascii=False, indent=4)
-
-    with open("comandos.json", "rb") as f:
-        files = {'file': ("comandos.json", f, 'application/json')}
-
-        try:
-            ip = '192.168.0.21'
+            ip = '192.168.0.21'  # Replace with your Raspberry Pi IP
             url = f'http://{ip}:5000/upload'
-            # payload = {"comando": comandos}
-            response = requests.post(url, files=files)
-            print(response.status_code)  # Print the HTTP status code
-            print(response.text)
-        except Exception as pyqt_error:
-            import traceback
-            response = traceback.print_exc()
-
-    return response
+            
+            # Two methods - try both file upload and direct JSON POST
+            
+            # Method 1: Send file
+            with open("comandos.json", "rb") as f:
+                files = {'file': ("comandos.json", f, 'application/json')}
+                response = requests.post(url, files=files, timeout=5)
+            
+            # Method 2: If first fails, try direct JSON
+            if response.status_code != 200:
+                response = requests.post(
+                    url, 
+                    json=comandos,
+                    headers={'Content-Type': 'application/json'},
+                    timeout=5
+                )
+            
+            return jsonify({
+                "success": True,
+                "status_code": response.status_code,
+                "message": "Commands sent to robot successfully",
+                "response": response.text
+            })
+            
+        except requests.exceptions.RequestException as e:
+            app.logger.error(f"Failed to connect to robot server: {str(e)}")
+            return jsonify({
+                "success": False, 
+                "error": f"Failed to connect to robot at {ip}:5000. Error: {str(e)}"
+            }), 500
+            
+    except Exception as e:
+        app.logger.error(f"Error in send_robot: {str(e)}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }), 500
 
 @app.route('/save', methods=['POST'])
 def save():

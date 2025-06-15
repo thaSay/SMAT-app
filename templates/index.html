@@ -534,22 +534,34 @@
           .addEventListener("click", executeCode);
 
         function sendRobot() {
+          const jsonData = jsonDataDisplay.textContent;
+          
           fetch("/api/send_robot", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(jsonDataDisplay.textContent),
+            body: jsonData
           })
-            .then((response) => {
-              console.log("Response do servidor recebida:", response);
-
-              return response.json();
-            })
-            .catch((error) => {
-              console.error("Erro ao comunicar com o servidor:", error);
-              alert("Erro ao comunicar com o servidor: " + error);
-            });
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              videoResultDisplay.textContent = "Commands sent to robot successfully!";
+              console.log("Robot response:", data.response);
+            } else {
+              throw new Error(data.error || "Failed to send commands to robot");
+            }
+          })
+          .catch(error => {
+            console.error("Error sending commands to robot:", error);
+            videoResultDisplay.textContent = `Error: ${error.message}`;
+            alert("Error sending commands to robot: " + error.message);
+          });
         }
         document
           .getElementById("send-btn")
