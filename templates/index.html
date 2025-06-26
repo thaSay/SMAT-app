@@ -862,11 +862,16 @@
           fetch("/api/get_control_data")
             .then((response) => response.json())
             .then((data) => {
+              console.log("Dados recebidos do servidor:", data);
+              console.log("lastUpdate:", lastUpdate);
+              console.log("data.timestamp:", data.timestamp);
+              
               if (
                 data &&
                 data.timestamp &&
                 new Date(data.timestamp) > lastUpdate
               ) {
+                console.log("Atualizando dados porque timestamp é mais recente");
                 lastUpdate = new Date(data.timestamp);
                 if (data.json_data) {
                   jsonDataDisplay.textContent = JSON.stringify(
@@ -876,11 +881,14 @@
                   );
                 }
                 if (data.video_result) {
+                  console.log("Atualizando video_result:", data.video_result);
                   videoResultDisplay.textContent = data.video_result;
                 }
                 if (data.robot_image) {
                   robotImagePlaceholder.textContent = data.robot_image;
                 }
+              } else {
+                console.log("Não atualizando dados - timestamp não é mais recente ou dados inválidos");
               }
             })
             .catch((error) =>
