@@ -10,85 +10,625 @@
             "Y": 0
         },
         {
-            "BDireito": 0,
-            "BEsquerdo": 0,
+            "BDireito": 10,
+            "BEsquerdo": 20,
             "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 555
+            "PDireito": 20,
+            "PEsquerdo": 10,
+            "X": 777,
+            "Y": 777
         },
         {
-            "BDireito": 0,
-            "BEsquerdo": 0,
+            "BDireito": 20,
+            "BEsquerdo": 40,
             "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 1111
+            "PDireito": 40,
+            "PEsquerdo": 20,
+            "X": 1555,
+            "Y": 1555
         },
         {
-            "BDireito": 0,
-            "BEsquerdo": 0,
+            "BDireito": 30,
+            "BEsquerdo": 60,
             "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 1666
+            "PDireito": 60,
+            "PEsquerdo": 30,
+            "X": 2333,
+            "Y": 2333
         },
         {
-            "BDireito": 0,
-            "BEsquerdo": 0,
+            "BDireito": 40,
+            "BEsquerdo": 80,
             "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 2222
+            "PDireito": 80,
+            "PEsquerdo": 40,
+            "X": 3111,
+            "Y": 3111
         },
         {
-            "BDireito": 0,
-            "BEsquerdo": 0,
+            "BDireito": 50,
+            "BEsquerdo": 100,
             "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 2777
-        },
-        {
-            "BDireito": 0,
-            "BEsquerdo": 0,
-            "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 3333
-        },
-        {
-            "BDireito": 0,
-            "BEsquerdo": 0,
-            "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
+            "PDireito": 100,
+            "PEsquerdo": 50,
+            "X": 3888,
             "Y": 3888
         },
         {
-            "BDireito": 0,
+            "BDireito": 60,
+            "BEsquerdo": 120,
+            "OwnAxis": 0,
+            "PDireito": 120,
+            "PEsquerdo": 60,
+            "X": 4666,
+            "Y": 4666
+        },
+        {
+            "BDireito": 70,
+            "BEsquerdo": 140,
+            "OwnAxis": 0,
+            "PDireito": 140,
+            "PEsquerdo": 70,
+            "X": 5444,
+            "Y": 5444
+        },
+        {
+            "BDireito": 80,
+            "BEsquerdo": 160,
+            "OwnAxis": 0,
+            "PDireito": 160,
+            "PEsquerdo": 80,
+            "X": 6222,
+            "Y": 6222
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 90,
+            "X": 7000,
+            "Y": 7000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 4500
+        },
+        {
+            "BDireito": 112,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 112,
+            "X": 4500,
+            "Y": 4562
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 135,
+            "X": 4500,
+            "Y": 4625
+        },
+        {
+            "BDireito": 157,
+            "BEsquerdo": 45,
+            "OwnAxis": 0,
+            "PDireito": 45,
+            "PEsquerdo": 157,
+            "X": 4500,
+            "Y": 4687
+        },
+        {
+            "BDireito": 180,
             "BEsquerdo": 0,
             "OwnAxis": 0,
             "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 4444
+            "PEsquerdo": 180,
+            "X": 4500,
+            "Y": 4750
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 0,
+            "OwnAxis": 0,
+            "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 4500,
+            "Y": 4750
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 0,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 4500,
+            "Y": 4812
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 4875
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 4500,
+            "Y": 4937
         },
         {
             "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 4500,
+            "Y": 5000
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 4500,
+            "Y": 5000
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 4500,
+            "Y": 5062
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 5125
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 0,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 4500,
+            "Y": 5187
+        },
+        {
+            "BDireito": 180,
             "BEsquerdo": 0,
             "OwnAxis": 0,
             "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 4500,
+            "Y": 5250
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 0,
+            "OwnAxis": 0,
+            "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 4500,
+            "Y": 5250
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 0,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 4500,
+            "Y": 5312
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 5375
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 4500,
+            "Y": 5437
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
             "PEsquerdo": 0,
-            "X": 0,
-            "Y": 5000
+            "X": 4500,
+            "Y": 5500
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 4500,
+            "Y": 5500
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 4500,
+            "Y": 5562
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 5625
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 0,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 4500,
+            "Y": 5687
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 0,
+            "OwnAxis": 0,
+            "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 4500,
+            "Y": 5750
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 0,
+            "OwnAxis": 0,
+            "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 4500,
+            "Y": 5750
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 0,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 4500,
+            "Y": 5812
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 5875
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 4500,
+            "Y": 5937
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 0,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 22,
+            "BEsquerdo": 157,
+            "OwnAxis": 0,
+            "PDireito": 157,
+            "PEsquerdo": 22,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 0,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 67,
+            "BEsquerdo": 112,
+            "OwnAxis": 0,
+            "PDireito": 112,
+            "PEsquerdo": 67,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 0,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 22,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 45,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 67,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 6000
+        },
+        {
+            "BDireito": 112,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 112,
+            "X": 4562,
+            "Y": 6000
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 135,
+            "X": 4625,
+            "Y": 6000
+        },
+        {
+            "BDireito": 157,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 157,
+            "X": 4687,
+            "Y": 6000
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 180,
+            "X": 4750,
+            "Y": 6000
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 180,
+            "X": 4750,
+            "Y": 6000
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 112,
+            "OwnAxis": 90,
+            "PDireito": 112,
+            "PEsquerdo": 135,
+            "X": 4812,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 135,
+            "OwnAxis": 90,
+            "PDireito": 135,
+            "PEsquerdo": 90,
+            "X": 4875,
+            "Y": 6000
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 157,
+            "OwnAxis": 90,
+            "PDireito": 157,
+            "PEsquerdo": 45,
+            "X": 4937,
+            "Y": 6000
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 90,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 5000,
+            "Y": 6000
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 90,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 5000,
+            "Y": 6000
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 90,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 5062,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 5125,
+            "Y": 6000
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 90,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 5187,
+            "Y": 6000
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 0,
+            "OwnAxis": 90,
+            "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 5250,
+            "Y": 6000
+        },
+        {
+            "BDireito": 180,
+            "BEsquerdo": 0,
+            "OwnAxis": 90,
+            "PDireito": 0,
+            "PEsquerdo": 180,
+            "X": 5250,
+            "Y": 6000
+        },
+        {
+            "BDireito": 135,
+            "BEsquerdo": 45,
+            "OwnAxis": 90,
+            "PDireito": 45,
+            "PEsquerdo": 135,
+            "X": 5312,
+            "Y": 6000
+        },
+        {
+            "BDireito": 90,
+            "BEsquerdo": 90,
+            "OwnAxis": 90,
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 5375,
+            "Y": 6000
+        },
+        {
+            "BDireito": 45,
+            "BEsquerdo": 135,
+            "OwnAxis": 90,
+            "PDireito": 135,
+            "PEsquerdo": 45,
+            "X": 5437,
+            "Y": 6000
+        },
+        {
+            "BDireito": 0,
+            "BEsquerdo": 180,
+            "OwnAxis": 90,
+            "PDireito": 180,
+            "PEsquerdo": 0,
+            "X": 5500,
+            "Y": 6000
         }
     ]
 }

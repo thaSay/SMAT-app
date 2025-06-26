@@ -229,7 +229,7 @@ def send_robot():
         
         # Send to the Raspberry Pi server
         try:
-            ip = '192.168.0.21'  # Replace with your Raspberry Pi IP
+            ip = '192.168.30.18'  # Replace with your Raspberry Pi IP
             url = f'http://{ip}:5000/upload'
             
             # Two methods - try both file upload and direct JSON POST
