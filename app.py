@@ -404,6 +404,15 @@ def upload_file():
     filepath = os.path.join('./temp_frames', filename)
     image.save(filepath)
 
+    # Atualizar dados de controle global para exibir no painel
+    global current_control_data
+    current_control_data = {
+        "timestamp": datetime.now().isoformat(),
+        "json_data": current_control_data.get("json_data"),
+        "video_result": f"Foto recebida: {filename} (índice: {command_index})",
+        "robot_image": current_control_data.get("robot_image", "[Area to display robot image]")
+    }
+
     print(f"Imagem salva em {filepath}")
     return jsonify({'message': f'Imagem recebida e salva como {filename}'}), 200
 

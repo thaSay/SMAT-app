@@ -155,8 +155,9 @@
 
       .video-player {
         width: 100%;
-        height: 100%;
-        object-fit: cover; /* ou 'contain', dependendo do que você quiser */
+        height: auto;
+        max-height: 300px;
+        object-fit: contain; /* Mostra o vídeo completo sem cortar */
         display: block;
       }
 
@@ -431,36 +432,6 @@
         workspace.addChangeListener(updateGeneratedJson); // Enviar para o Robô (Executar) - Modificado para usar endpoints Flask
 
         const jsonDataDisplay = document.getElementById("json-data-display");
-
-        function updateData() {
-          fetch("/api/get_control_data")
-            .then((response) => response.json())
-            .then((data) => {
-              if (
-                data &&
-                data.timestamp &&
-                new Date(data.timestamp) > lastUpdate
-              ) {
-                lastUpdate = new Date(data.timestamp);
-                if (data.json_data) {
-                  jsonDataDisplay.textContent = JSON.stringify(
-                    data.json_data,
-                    null,
-                    2
-                  );
-                }
-                if (data.video_result) {
-                  videoResultDisplay.textContent = data.video_result;
-                }
-                if (data.robot_image) {
-                  robotImagePlaceholder.textContent = data.robot_image;
-                }
-              }
-            })
-            .catch((error) =>
-              console.error("Error fetching control data:", error)
-            );
-        }
 
         function executeCode() {
           var jsonOutput = document.getElementById("code-output").textContent;
@@ -887,9 +858,38 @@
         jsonDataDisplay.textContent = "No data received.";
 
         // Update data from server
+        function updateData() {
+          fetch("/api/get_control_data")
+            .then((response) => response.json())
+            .then((data) => {
+              if (
+                data &&
+                data.timestamp &&
+                new Date(data.timestamp) > lastUpdate
+              ) {
+                lastUpdate = new Date(data.timestamp);
+                if (data.json_data) {
+                  jsonDataDisplay.textContent = JSON.stringify(
+                    data.json_data,
+                    null,
+                    2
+                  );
+                }
+                if (data.video_result) {
+                  videoResultDisplay.textContent = data.video_result;
+                }
+                if (data.robot_image) {
+                  robotImagePlaceholder.textContent = data.robot_image;
+                }
+              }
+            })
+            .catch((error) =>
+              console.error("Error fetching control data:", error)
+            );
+        }
 
         // Start polling for updates
-        // setInterval(updateData, pollingInterval);
+        setInterval(updateData, pollingInterval);
 
         // Capture button click
         mergeButton.addEventListener("click", function () {
