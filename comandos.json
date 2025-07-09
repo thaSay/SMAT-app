@@ -1,85 +1,40 @@
 {
     "command": [
         {
-            "BDireito": 0,
-            "BEsquerdo": 0,
+            "BDireito": 90,
+            "BEsquerdo": 90,
             "OwnAxis": 0,
-            "PDireito": 0,
-            "PEsquerdo": 0,
-            "X": 0,
-            "Y": 0
+            "PDireito": 90,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 4500
         },
         {
-            "BDireito": 10,
-            "BEsquerdo": 20,
+            "BDireito": 90,
+            "BEsquerdo": 112,
             "OwnAxis": 0,
-            "PDireito": 20,
-            "PEsquerdo": 10,
-            "X": 777,
-            "Y": 777
+            "PDireito": 112,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 4500
         },
         {
-            "BDireito": 20,
-            "BEsquerdo": 40,
+            "BDireito": 90,
+            "BEsquerdo": 135,
             "OwnAxis": 0,
-            "PDireito": 40,
-            "PEsquerdo": 20,
-            "X": 1555,
-            "Y": 1555
+            "PDireito": 135,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 4500
         },
         {
-            "BDireito": 30,
-            "BEsquerdo": 60,
+            "BDireito": 90,
+            "BEsquerdo": 157,
             "OwnAxis": 0,
-            "PDireito": 60,
-            "PEsquerdo": 30,
-            "X": 2333,
-            "Y": 2333
-        },
-        {
-            "BDireito": 40,
-            "BEsquerdo": 80,
-            "OwnAxis": 0,
-            "PDireito": 80,
-            "PEsquerdo": 40,
-            "X": 3111,
-            "Y": 3111
-        },
-        {
-            "BDireito": 50,
-            "BEsquerdo": 100,
-            "OwnAxis": 0,
-            "PDireito": 100,
-            "PEsquerdo": 50,
-            "X": 3888,
-            "Y": 3888
-        },
-        {
-            "BDireito": 60,
-            "BEsquerdo": 120,
-            "OwnAxis": 0,
-            "PDireito": 120,
-            "PEsquerdo": 60,
-            "X": 4666,
-            "Y": 4666
-        },
-        {
-            "BDireito": 70,
-            "BEsquerdo": 140,
-            "OwnAxis": 0,
-            "PDireito": 140,
-            "PEsquerdo": 70,
-            "X": 5444,
-            "Y": 5444
-        },
-        {
-            "BDireito": 80,
-            "BEsquerdo": 160,
-            "OwnAxis": 0,
-            "PDireito": 160,
-            "PEsquerdo": 80,
-            "X": 6222,
-            "Y": 6222
+            "PDireito": 157,
+            "PEsquerdo": 90,
+            "X": 4500,
+            "Y": 4500
         },
         {
             "BDireito": 90,
@@ -87,8 +42,8 @@
             "OwnAxis": 0,
             "PDireito": 180,
             "PEsquerdo": 90,
-            "X": 7000,
-            "Y": 7000
+            "X": 4500,
+            "Y": 4500
         },
         {
             "BDireito": 90,

@@ -217,6 +217,8 @@ def execute():
 @app.route('/api/send_robot', methods=['POST'])
 def send_robot():
     try:
+        global_video_renderer.clear_temp_directory()
+
         # Get data directly without extra processing
         data = request.get_json()
         
